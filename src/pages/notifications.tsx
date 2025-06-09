@@ -28,8 +28,8 @@ export default function NotificationsPage() {
         if (!res.ok) throw new Error("通知の取得に失敗しました");
         const data = await res.json();
         setNotifications(data);
-      } catch (_err) {
-        console.error("通知取得エラー");
+      } catch (err) {
+        console.error("通知取得エラー:", err);  // ✅ ここで明示的に err を使用
         alert("通知の取得に失敗しました");
       } finally {
         setLoading(false);
@@ -37,7 +37,7 @@ export default function NotificationsPage() {
     };
 
     fetchNotifications();
-  }, [router]); // ← useEffect依存解消済み
+  }, [router]); // ✅ useRouter の依存解消済み
 
   return (
     <div className="max-w-2xl mx-auto p-4">
