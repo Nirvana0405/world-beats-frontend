@@ -1,4 +1,4 @@
-import { useEffect, useState, ChangeEvent, FormEvent } from "react";
+import { useEffect, useState, ChangeEvent, FormEvent, FC } from "react";
 import { useRouter } from "next/router";
 import { logoutUser } from "@/lib/auth";
 
@@ -9,18 +9,14 @@ type Profile = {
   favorite_artists: string;
 };
 
-// 🔧 トークン取得関数
 const getToken = (): string | null => localStorage.getItem("access_token");
 
-// ❌ エラー処理共通化
 const handleError = (err: unknown): string => {
-  if (err instanceof Error) {
-    return err.message || "サーバーエラーが発生しました";
-  }
+  if (err instanceof Error) return err.message || "サーバーエラーが発生しました";
   return "サーバーエラーが発生しました";
 };
 
-export default function ProfileEditPage() {
+const ProfileEditPage: FC = () => {
   const router = useRouter();
   const [profile, setProfile] = useState<Profile>({
     display_name: "",
@@ -34,7 +30,6 @@ export default function ProfileEditPage() {
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
 
-  // ✅ プロフィール取得
   useEffect(() => {
     const token = getToken();
     if (!token) {
@@ -42,7 +37,7 @@ export default function ProfileEditPage() {
       return;
     }
 
-    fetch("http://localhost:8000/api/accounts/profile/", {
+    fetch(`${process.env.NEXT_PUBLIC_API_URL}/accounts/profile/`, {
       headers: { Authorization: `Bearer ${token}` },
     })
       .then((res) => res.json())
@@ -59,13 +54,11 @@ export default function ProfileEditPage() {
       .finally(() => setLoading(false));
   }, [router]);
 
-  // ✅ 入力変更
   const handleChange = (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     setProfile((prev) => ({ ...prev, [name]: value }));
   };
 
-  // ✅ プロフィール更新
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     const token = getToken();
@@ -77,7 +70,7 @@ export default function ProfileEditPage() {
     };
 
     try {
-      const res = await fetch("http://localhost:8000/api/accounts/profile/", {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/accounts/profile/`, {
         method: "PATCH",
         headers: {
           "Content-Type": "application/json",
@@ -98,13 +91,11 @@ export default function ProfileEditPage() {
     }
   };
 
-  // ✅ プロフィール画像選択
   const handleFileChange = (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0] || null;
     setIconFile(file);
   };
 
-  // ✅ プロフィール画像アップロード
   const handleImageUpload = async () => {
     if (!iconFile) {
       setError("画像ファイルを選択してください");
@@ -118,7 +109,7 @@ export default function ProfileEditPage() {
     formData.append("icon", iconFile);
 
     try {
-      const res = await fetch("http://localhost:8000/api/accounts/profile-detail/", {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/accounts/profile-detail/`, {
         method: "PUT",
         headers: { Authorization: `Bearer ${token}` },
         body: formData,
@@ -135,15 +126,13 @@ export default function ProfileEditPage() {
     }
   };
 
-  // ✅ 退会処理
   const handleDeactivate = async () => {
     if (!confirm("本当に退会しますか？この操作は元に戻せません。")) return;
-
     const token = getToken();
     if (!token) return;
 
     try {
-      const res = await fetch("http://localhost:8000/api/accounts/deactivate/", {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/accounts/deactivate/`, {
         method: "DELETE",
         headers: { Authorization: `Bearer ${token}` },
       });
@@ -164,9 +153,8 @@ export default function ProfileEditPage() {
   return (
     <div className="p-6 max-w-xl mx-auto">
       <h1 className="text-2xl font-bold mb-4">プロフィール編集</h1>
-
-      {message && <div className="bg-green-100 text-green-800 p-2 rounded mb-4">{message}</div>}
-      {error && <div className="bg-red-100 text-red-800 p-2 rounded mb-4">{error}</div>}
+      {message && <Alert type="success" text={message} />}
+      {error && <Alert type="error" text={error} />}
 
       <form onSubmit={handleSubmit} className="space-y-4">
         <Input label="表示名" name="display_name" value={profile.display_name} onChange={handleChange} />
@@ -178,7 +166,6 @@ export default function ProfileEditPage() {
         </button>
       </form>
 
-      {/* ✅ 画像アップロード */}
       <Section title="プロフィール画像">
         <input type="file" accept="image/*" onChange={handleFileChange} className="mb-2" />
         <button onClick={handleImageUpload} className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700">
@@ -186,7 +173,6 @@ export default function ProfileEditPage() {
         </button>
       </Section>
 
-      {/* ✅ 退会 */}
       <Section>
         <button onClick={handleDeactivate} className="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700">
           アカウントを削除する
@@ -194,63 +180,47 @@ export default function ProfileEditPage() {
       </Section>
     </div>
   );
-}
+};
 
-// 🔧 再利用可能な UI コンポーネント
-const Input = ({
-  label,
-  name,
-  value,
-  onChange,
-}: {
+export default ProfileEditPage;
+
+// 🔧 共通コンポーネント
+
+const Input: FC<{
   label: string;
   name?: string;
   value: string;
   onChange: (e: ChangeEvent<HTMLInputElement>) => void;
-}) => (
+}> = ({ label, name, value, onChange }) => (
   <div>
     <label className="block font-medium mb-1">{label}</label>
-    <input
-      type="text"
-      name={name}
-      value={value}
-      onChange={onChange}
-      className="w-full border p-2 rounded"
-    />
+    <input type="text" name={name} value={value} onChange={onChange} className="w-full border p-2 rounded" />
   </div>
 );
 
-const Textarea = ({
-  label,
-  name,
-  value,
-  onChange,
-}: {
+const Textarea: FC<{
   label: string;
   name: string;
   value: string;
   onChange: (e: ChangeEvent<HTMLTextAreaElement>) => void;
-}) => (
+}> = ({ label, name, value, onChange }) => (
   <div>
     <label className="block font-medium mb-1">{label}</label>
-    <textarea
-      name={name}
-      value={value}
-      onChange={onChange}
-      className="w-full border p-2 rounded"
-    />
+    <textarea name={name} value={value} onChange={onChange} className="w-full border p-2 rounded" />
   </div>
 );
 
-const Section = ({
-  title,
-  children,
-}: {
-  title?: string;
-  children: React.ReactNode;
-}) => (
+const Section: FC<{ title?: string; children: React.ReactNode }> = ({ title, children }) => (
   <div className="mt-6 border-t pt-4">
     {title && <h2 className="font-bold mb-2">{title}</h2>}
     {children}
+  </div>
+);
+
+const Alert: FC<{ type: "success" | "error"; text: string }> = ({ type, text }) => (
+  <div
+    className={`p-2 rounded mb-4 ${type === "success" ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"}`}
+  >
+    {text}
   </div>
 );
