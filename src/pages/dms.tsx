@@ -36,8 +36,8 @@ export default function DMChatPage() {
       });
       const data = await res.json();
       setMessages(Array.isArray(data.results) ? data.results : []);
-    } catch (err) {
-      console.error("DM取得失敗:", err);
+    } catch (error) {
+      console.error("DM取得失敗:", error);
     }
   };
 
@@ -65,8 +65,8 @@ export default function DMChatPage() {
       const newMsg: Message = await res.json();
       setMessages((prev) => [...prev, newMsg]);
       setNewMessage("");
-    } catch (err) {
-      console.error("送信エラー:", err);
+    } catch (error) {
+      console.error("送信エラー:", error);
       alert("送信に失敗しました");
     }
   };
