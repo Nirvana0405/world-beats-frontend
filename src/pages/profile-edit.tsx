@@ -1,3 +1,4 @@
+// src/pages/profile-edit.tsx
 import { useEffect, useState, ChangeEvent, FormEvent, FC } from "react";
 import { useRouter } from "next/router";
 import { logoutUser } from "@/lib/auth";
@@ -24,11 +25,11 @@ const ProfileEditPage: FC = () => {
     favorite_genres: [],
     favorite_artists: "",
   });
-  const [genreInput, setGenreInput] = useState("");
+  const [genreInput, setGenreInput] = useState<string>("");
   const [iconFile, setIconFile] = useState<File | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [message, setMessage] = useState("");
-  const [error, setError] = useState("");
+  const [loading, setLoading] = useState<boolean>(true);
+  const [message, setMessage] = useState<string>("");
+  const [error, setError] = useState<string>("");
 
   useEffect(() => {
     const token = getToken();
@@ -195,7 +196,7 @@ const ProfileEditPage: FC = () => {
 
 export default ProfileEditPage;
 
-// 共通UIコンポーネント
+// 共通コンポーネント
 const Input: FC<{ label: string; name?: string; value: string; onChange: (e: ChangeEvent<HTMLInputElement>) => void }> = ({
   label,
   name,
