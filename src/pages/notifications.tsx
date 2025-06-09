@@ -28,8 +28,8 @@ export default function NotificationsPage() {
         if (!res.ok) throw new Error("通知の取得に失敗しました");
         const data = await res.json();
         setNotifications(data);
-      } catch (err) {
-        console.error("通知取得エラー:", err);
+      } catch (_err) {
+        console.error("通知取得エラー");
         alert("通知の取得に失敗しました");
       } finally {
         setLoading(false);
@@ -37,7 +37,7 @@ export default function NotificationsPage() {
     };
 
     fetchNotifications();
-  }, []);
+  }, [router]);
 
   return (
     <div className="max-w-2xl mx-auto p-4">
