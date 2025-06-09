@@ -1,4 +1,3 @@
-// pages/profile.tsx
 import { useEffect, useState } from "react";
 import { useRouter } from "next/router";
 
@@ -27,12 +26,19 @@ export default function ProfilePage() {
         const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/accounts/profile/`, {
           headers: { Authorization: `Bearer ${token}` },
         });
-        if (!res.ok) throw new Error("プロフィール取得エラー");
+
+        if (!res.ok) {
+          throw new Error("プロフィール取得エラー");
+        }
 
         const data: Profile = await res.json();
         setProfile(data);
-      } catch (err: unknown) {
-        console.error("取得エラー:", err instanceof Error ? err.message : err);
+      } catch (err) {
+        if (err instanceof Error) {
+          console.error("取得エラー:", err.message);
+        } else {
+          console.error("取得エラー:", String(err));
+        }
       } finally {
         setLoading(false);
       }
