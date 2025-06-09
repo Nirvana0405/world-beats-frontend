@@ -1,5 +1,6 @@
 import { useRouter } from "next/router";
 import { useEffect, useState } from "react";
+import Image from "next/image";
 
 type Profile = {
   username: string;
@@ -16,13 +17,17 @@ export default function PublicProfilePage() {
   const [profile, setProfile] = useState<Profile | null>(null);
 
   useEffect(() => {
-    if (!userId) return;
+    if (typeof userId !== "string") return;
 
-    fetch(`http://localhost:8000/api/accounts/public-profile/${userId}/`)
+    fetch(`${process.env.NEXT_PUBLIC_API_URL}/accounts/public-profile/${userId}/`)
       .then((res) => res.json())
       .then(setProfile)
-      .catch((err) => {
-        console.error("プロフィール取得エラー", err);
+      .catch((err: unknown) => {
+        if (err instanceof Error) {
+          console.error("プロフィール取得エラー:", err.message);
+        } else {
+          console.error("プロフィール取得エラー:", err);
+        }
       });
   }, [userId]);
 
@@ -35,7 +40,15 @@ export default function PublicProfilePage() {
       <p>自己紹介: {profile.bio}</p>
       <p>好きなジャンル: {profile.favorite_genres.join(", ")}</p>
       <p>好きなアーティスト: {profile.favorite_artists}</p>
-      {profile.icon && <img src={profile.icon} alt="プロフィール画像" className="w-24 h-24 rounded-full mt-2" />}
+      {profile.icon && (
+        <Image
+          src={profile.icon.startsWith("http") ? profile.icon : `http://localhost:8000${profile.icon}`}
+          alt="プロフィール画像"
+          width={96}
+          height={96}
+          className="rounded-full mt-2"
+        />
+      )}
     </div>
   );
 }
