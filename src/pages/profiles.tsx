@@ -16,12 +16,13 @@ export default function ProfilesPage() {
   useEffect(() => {
     const fetchProfiles = async () => {
       try {
-        const res = await fetch(`http://localhost:8000/api/profiles/?q=${query}`);
+        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/profiles/?q=${encodeURIComponent(query)}`);
         if (!res.ok) throw new Error("プロフィール取得エラー");
-        const data = await res.json();
+
+        const data: Profile[] = await res.json();
         setProfiles(data);
-      } catch (err) {
-        console.error("検索エラー:", err);
+      } catch (err: unknown) {
+        console.error("検索エラー:", err instanceof Error ? err.message : err);
       }
     };
 
@@ -46,11 +47,10 @@ export default function ProfilesPage() {
         <ul className="space-y-4">
           {profiles.map((profile) => (
             <li key={profile.id} className="p-4 border rounded shadow-sm bg-white">
-              <Link
-                href={`/profiles/${profile.id}`}
-                className="text-blue-600 font-semibold hover:underline"
-              >
-                {profile.display_name}
+              <Link href={`/profiles/${profile.id}`}>
+                <a className="text-blue-600 font-semibold hover:underline">
+                  {profile.display_name}
+                </a>
               </Link>
               <div className="text-sm text-gray-600">
                 🎧 {profile.favorite_genres.join(", ") || "未設定"}
@@ -62,64 +62,6 @@ export default function ProfilesPage() {
           ))}
         </ul>
       )}
-    </div>
-  );
-}
-
-
-
-
-// pages/profile.tsx
-import { useEffect, useState } from "react";
-import { useRouter } from "next/router";
-
-type Profile = {
-  display_name: string;
-  bio: string;
-  favorite_genres: string[];
-  favorite_artists: string;
-  icon?: string;
-};
-
-export default function ProfilePage() {
-  const router = useRouter();
-  const [profile, setProfile] = useState<Profile | null>(null);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    const token = localStorage.getItem("access_token");
-    if (!token) {
-      router.push("/login");
-      return;
-    }
-
-    fetch("http://localhost:8000/api/accounts/profile/", {
-      headers: { Authorization: `Bearer ${token}` },
-    })
-      .then((res) => res.json())
-      .then((data) => setProfile(data))
-      .finally(() => setLoading(false));
-  }, [router]);
-
-  if (loading) return <p>読み込み中...</p>;
-  if (!profile) return <p>プロフィールが見つかりません</p>;
-
-  return (
-    <div className="p-6 max-w-xl mx-auto">
-      <h1 className="text-2xl font-bold mb-4">{profile.display_name}</h1>
-
-      {/* ✅ プロフィール画像の表示 */}
-      {profile.icon && (
-        <img
-          src={`http://localhost:8000${profile.icon}`}
-          alt="プロフィール画像"
-          className="w-24 h-24 rounded-full mb-4"
-        />
-      )}
-
-      <p className="mb-2">自己紹介: {profile.bio}</p>
-      <p className="mb-2">好きなジャンル: {profile.favorite_genres.join(", ")}</p>
-      <p className="mb-2">好きなアーティスト: {profile.favorite_artists}</p>
     </div>
   );
 }
