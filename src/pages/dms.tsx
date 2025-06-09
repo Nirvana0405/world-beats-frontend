@@ -1,4 +1,3 @@
-// pages/dm.tsx
 import { useEffect, useState } from "react";
 
 type Message = {
@@ -17,10 +16,9 @@ export default function DMChatPage() {
   const [receiverId, setReceiverId] = useState(""); // フォームから受信者ID入力
 
   const currentUserId = typeof window !== "undefined"
-    ? Number(localStorage.getItem("user_id")) // 事前に保存しているなら
+    ? Number(localStorage.getItem("user_id"))
     : 0;
 
-  // アクセストークンとDM取得
   useEffect(() => {
     const storedToken = localStorage.getItem("access_token");
     if (!storedToken) return;
@@ -68,6 +66,7 @@ export default function DMChatPage() {
       setMessages((prev) => [...prev, newMsg]);
       setNewMessage("");
     } catch (err) {
+      console.error("送信エラー:", err);
       alert("送信に失敗しました");
     }
   };
