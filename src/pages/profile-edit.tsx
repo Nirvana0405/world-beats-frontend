@@ -87,7 +87,7 @@ const ProfileEditPage: FC = () => {
 
       setMessage("✅ プロフィールを更新しました！");
       setTimeout(() => router.push("/profile"), 1500);
-    } catch (err) {
+    } catch (err: unknown) {
       setError("❌ " + handleError(err));
     }
   };
@@ -123,7 +123,7 @@ const ProfileEditPage: FC = () => {
       }
 
       setMessage("✅ プロフィール画像をアップロードしました！");
-    } catch (err) {
+    } catch (err: unknown) {
       setError("❌ " + handleError(err));
     }
   };
@@ -145,7 +145,7 @@ const ProfileEditPage: FC = () => {
       } else {
         setError("退会に失敗しました。");
       }
-    } catch (err) {
+    } catch (err: unknown) {
       setError("❌ " + handleError(err));
     }
   };
