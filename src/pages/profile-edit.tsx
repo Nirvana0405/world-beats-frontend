@@ -50,7 +50,7 @@ const ProfileEditPage: FC = () => {
         });
         setGenreInput((data.favorite_genres || []).join(", "));
       })
-      .catch((err) => setError("❌ " + handleError(err)))
+      .catch((err: unknown) => setError("❌ " + handleError(err)))
       .finally(() => setLoading(false));
   }, [router]);
 
