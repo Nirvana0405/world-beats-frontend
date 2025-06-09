@@ -1,0 +1,65 @@
+// pages/dms.tsx
+import { useState, useEffect } from "react";
+
+export default function DMsPage() {
+  const [receiver, setReceiver] = useState(""); // 受信者のユーザー名やID
+  const [message, setMessage] = useState("");
+  const [token, setToken] = useState<string | null>(null);
+
+  useEffect(() => {
+    const stored = localStorage.getItem("access_token");
+    if (stored) setToken(stored);
+  }, []);
+
+  const handleSend = async () => {
+    if (!receiver || !message || !token) {
+      alert("全て入力してください");
+      return;
+    }
+
+    const res = await fetch("http://localhost:8000/api/dms/", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({
+        receiver,
+        message,
+      }),
+    });
+
+    if (res.ok) {
+      alert("メッセージを送信しました！");
+      setMessage("");
+    } else {
+      const err = await res.json();
+      alert("送信に失敗：" + JSON.stringify(err));
+    }
+  };
+
+  return (
+    <div>
+      <h1>📨 メッセージ送信</h1>
+      <label>受信者ユーザーID:</label>
+      <input
+        value={receiver}
+        onChange={(e) => setReceiver(e.target.value)}
+        placeholder="例: 2"
+        className="border p-1"
+      />
+      <br />
+      <label>メッセージ内容:</label>
+      <textarea
+        value={message}
+        onChange={(e) => setMessage(e.target.value)}
+        placeholder="こんにちは！"
+        className="border p-1"
+      />
+      <br />
+      <button onClick={handleSend} className="bg-blue-500 text-white px-3 py-1 rounded">
+        送信
+      </button>
+    </div>
+  );
+}
