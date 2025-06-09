@@ -9,6 +9,17 @@ type Profile = {
   favorite_artists: string;
 };
 
+// 🔧 トークン取得関数
+const getToken = (): string | null => localStorage.getItem("access_token");
+
+// ❌ エラー処理共通化
+const handleError = (err: unknown): string => {
+  if (err instanceof Error) {
+    return err.message || "サーバーエラーが発生しました";
+  }
+  return "サーバーエラーが発生しました";
+};
+
 export default function ProfileEditPage() {
   const router = useRouter();
   const [profile, setProfile] = useState<Profile>({
@@ -25,7 +36,7 @@ export default function ProfileEditPage() {
 
   // ✅ プロフィール取得
   useEffect(() => {
-    const token = localStorage.getItem("access_token");
+    const token = getToken();
     if (!token) {
       router.push("/login");
       return;
@@ -44,6 +55,7 @@ export default function ProfileEditPage() {
         });
         setGenreInput((data.favorite_genres || []).join(", "));
       })
+      .catch((err) => setError("❌ " + handleError(err)))
       .finally(() => setLoading(false));
   }, [router]);
 
@@ -53,10 +65,10 @@ export default function ProfileEditPage() {
     setProfile((prev) => ({ ...prev, [name]: value }));
   };
 
-  // ✅ ジャンル更新
+  // ✅ プロフィール更新
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
-    const token = localStorage.getItem("access_token");
+    const token = getToken();
     if (!token) return;
 
     const updatedData = {
@@ -76,15 +88,13 @@ export default function ProfileEditPage() {
 
       if (!res.ok) {
         const data = await res.json();
-        const firstError = Object.values(data)?.[0]?.[0] || "更新に失敗しました";
-        throw new Error(firstError);
+        throw new Error(Object.values(data)?.[0]?.[0] || "更新に失敗しました");
       }
 
       setMessage("✅ プロフィールを更新しました！");
       setTimeout(() => router.push("/profile"), 1500);
-    } catch (err: any) {
-      console.error("更新エラー:", err);
-      setError("❌ " + (err.message || "サーバーエラーが発生しました"));
+    } catch (err) {
+      setError("❌ " + handleError(err));
     }
   };
 
@@ -101,7 +111,7 @@ export default function ProfileEditPage() {
       return;
     }
 
-    const token = localStorage.getItem("access_token");
+    const token = getToken();
     if (!token) return;
 
     const formData = new FormData();
@@ -110,22 +120,18 @@ export default function ProfileEditPage() {
     try {
       const res = await fetch("http://localhost:8000/api/accounts/profile-detail/", {
         method: "PUT",
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+        headers: { Authorization: `Bearer ${token}` },
         body: formData,
       });
 
       if (!res.ok) {
         const data = await res.json();
-        const firstError = Object.values(data)?.[0]?.[0] || "アップロードに失敗しました";
-        throw new Error(firstError);
+        throw new Error(Object.values(data)?.[0]?.[0] || "アップロードに失敗しました");
       }
 
       setMessage("✅ プロフィール画像をアップロードしました！");
-    } catch (err: any) {
-      console.error("アップロードエラー:", err);
-      setError("❌ " + (err.message || "サーバーエラーが発生しました"));
+    } catch (err) {
+      setError("❌ " + handleError(err));
     }
   };
 
@@ -133,7 +139,8 @@ export default function ProfileEditPage() {
   const handleDeactivate = async () => {
     if (!confirm("本当に退会しますか？この操作は元に戻せません。")) return;
 
-    const token = localStorage.getItem("access_token");
+    const token = getToken();
+    if (!token) return;
 
     try {
       const res = await fetch("http://localhost:8000/api/accounts/deactivate/", {
@@ -148,8 +155,7 @@ export default function ProfileEditPage() {
         setError("退会に失敗しました。");
       }
     } catch (err) {
-      console.error("退会エラー:", err);
-      setError("❌ サーバーエラーが発生しました。");
+      setError("❌ " + handleError(err));
     }
   };
 
@@ -163,75 +169,88 @@ export default function ProfileEditPage() {
       {error && <div className="bg-red-100 text-red-800 p-2 rounded mb-4">{error}</div>}
 
       <form onSubmit={handleSubmit} className="space-y-4">
-        <div>
-          <label className="block font-medium mb-1">表示名</label>
-          <input
-            type="text"
-            name="display_name"
-            value={profile.display_name}
-            onChange={handleChange}
-            className="w-full border p-2 rounded"
-            required
-          />
-        </div>
-
-        <div>
-          <label className="block font-medium mb-1">自己紹介</label>
-          <textarea
-            name="bio"
-            value={profile.bio}
-            onChange={handleChange}
-            className="w-full border p-2 rounded"
-          />
-        </div>
-
-        <div>
-          <label className="block font-medium mb-1">好きなジャンル（カンマ区切り）</label>
-          <input
-            type="text"
-            value={genreInput}
-            onChange={(e) => setGenreInput(e.target.value)}
-            className="w-full border p-2 rounded"
-          />
-        </div>
-
-        <div>
-          <label className="block font-medium mb-1">好きなアーティスト</label>
-          <input
-            type="text"
-            name="favorite_artists"
-            value={profile.favorite_artists}
-            onChange={handleChange}
-            className="w-full border p-2 rounded"
-          />
-        </div>
-
+        <Input label="表示名" name="display_name" value={profile.display_name} onChange={handleChange} />
+        <Textarea label="自己紹介" name="bio" value={profile.bio} onChange={handleChange} />
+        <Input label="好きなジャンル（カンマ区切り）" value={genreInput} onChange={(e) => setGenreInput(e.target.value)} />
+        <Input label="好きなアーティスト" name="favorite_artists" value={profile.favorite_artists} onChange={handleChange} />
         <button type="submit" className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded">
           保存する
         </button>
       </form>
 
-      {/* ✅ プロフィール画像アップロード */}
-      <div className="mt-6 border-t pt-4">
-        <h2 className="font-bold mb-2">プロフィール画像</h2>
+      {/* ✅ 画像アップロード */}
+      <Section title="プロフィール画像">
         <input type="file" accept="image/*" onChange={handleFileChange} className="mb-2" />
-        <button
-          onClick={handleImageUpload}
-          className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700"
-        >
+        <button onClick={handleImageUpload} className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700">
           画像をアップロード
         </button>
-      </div>
+      </Section>
 
-      {/* ✅ 退会ボタン */}
-      <div className="mt-8 border-t pt-4">
-        <button
-          onClick={handleDeactivate}
-          className="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700"
-        >
+      {/* ✅ 退会 */}
+      <Section>
+        <button onClick={handleDeactivate} className="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700">
           アカウントを削除する
         </button>
-      </div>
+      </Section>
     </div>
   );
 }
+
+// 🔧 再利用可能な UI コンポーネント
+const Input = ({
+  label,
+  name,
+  value,
+  onChange,
+}: {
+  label: string;
+  name?: string;
+  value: string;
+  onChange: (e: ChangeEvent<HTMLInputElement>) => void;
+}) => (
+  <div>
+    <label className="block font-medium mb-1">{label}</label>
+    <input
+      type="text"
+      name={name}
+      value={value}
+      onChange={onChange}
+      className="w-full border p-2 rounded"
+    />
+  </div>
+);
+
+const Textarea = ({
+  label,
+  name,
+  value,
+  onChange,
+}: {
+  label: string;
+  name: string;
+  value: string;
+  onChange: (e: ChangeEvent<HTMLTextAreaElement>) => void;
+}) => (
+  <div>
+    <label className="block font-medium mb-1">{label}</label>
+    <textarea
+      name={name}
+      value={value}
+      onChange={onChange}
+      className="w-full border p-2 rounded"
+    />
+  </div>
+);
+
+const Section = ({
+  title,
+  children,
+}: {
+  title?: string;
+  children: React.ReactNode;
+}) => (
+  <div className="mt-6 border-t pt-4">
+    {title && <h2 className="font-bold mb-2">{title}</h2>}
+    {children}
+  </div>
+);
