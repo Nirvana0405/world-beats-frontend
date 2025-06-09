@@ -161,7 +161,11 @@ const ProfileEditPage: FC = () => {
       <form onSubmit={handleSubmit} className="space-y-4">
         <Input label="表示名" name="display_name" value={profile.display_name} onChange={handleChange} />
         <Textarea label="自己紹介" name="bio" value={profile.bio} onChange={handleChange} />
-        <Input label="好きなジャンル（カンマ区切り）" value={genreInput} onChange={(e) => setGenreInput(e.target.value)} />
+        <Input
+          label="好きなジャンル（カンマ区切り）"
+          value={genreInput}
+          onChange={(e: ChangeEvent<HTMLInputElement>) => setGenreInput(e.target.value)}
+        />
         <Input label="好きなアーティスト" name="favorite_artists" value={profile.favorite_artists} onChange={handleChange} />
         <button type="submit" className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded">
           保存する
@@ -169,7 +173,12 @@ const ProfileEditPage: FC = () => {
       </form>
 
       <Section title="プロフィール画像">
-        <input type="file" accept="image/*" onChange={handleFileChange} className="mb-2" />
+        <input
+          type="file"
+          accept="image/*"
+          onChange={(e: ChangeEvent<HTMLInputElement>) => handleFileChange(e)}
+          className="mb-2"
+        />
         <button onClick={handleImageUpload} className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700">
           画像をアップロード
         </button>
