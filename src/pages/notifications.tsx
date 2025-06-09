@@ -22,7 +22,7 @@ export default function NotificationsPage() {
 
     const fetchNotifications = async () => {
       try {
-        const res = await fetch("http://localhost:8000/api/notifications/", {
+        const res = await fetch("https://world-beats-backend.onrender.com/api/notifications/", {
           headers: { Authorization: `Bearer ${token}` },
         });
         if (!res.ok) throw new Error("通知の取得に失敗しました");
@@ -37,7 +37,7 @@ export default function NotificationsPage() {
     };
 
     fetchNotifications();
-  }, [router]); // ← routerを依存配列に含めることでESLintエラーを回避
+  }, [router]); // ← useEffect依存解消済み
 
   return (
     <div className="max-w-2xl mx-auto p-4">
