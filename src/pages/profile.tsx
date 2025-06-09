@@ -32,10 +32,10 @@ export default function ProfilePage() {
     const fetchData = async () => {
       try {
         const [profileRes, tracksRes] = await Promise.all([
-          fetch("http://localhost:8000/api/accounts/profile/", {
+          fetch(`${process.env.NEXT_PUBLIC_API_URL}/accounts/profile/`, {
             headers: { Authorization: `Bearer ${token}` },
           }),
-          fetch("http://localhost:8000/api/tracks/my/", {
+          fetch(`${process.env.NEXT_PUBLIC_API_URL}/tracks/my/`, {
             headers: { Authorization: `Bearer ${token}` },
           }),
         ]);
@@ -47,8 +47,12 @@ export default function ProfilePage() {
 
         setProfile(profileData);
         setTracks(tracksData);
-      } catch (err) {
-        console.error("データ取得エラー:", err);
+      } catch (err: unknown) {
+        if (err instanceof Error) {
+          console.error("データ取得エラー:", err.message);
+        } else {
+          console.error("データ取得エラー:", err);
+        }
       } finally {
         setLoading(false);
       }
@@ -66,7 +70,7 @@ export default function ProfilePage() {
 
       {profile.icon && (
         <img
-          src={`http://localhost:8000${profile.icon}`}
+          src={`${process.env.NEXT_PUBLIC_API_URL?.replace("/api", "")}${profile.icon}`}
           alt="プロフィール画像"
           width={120}
           className="rounded-full mb-4"
@@ -98,7 +102,7 @@ export default function ProfilePage() {
             <li key={track.id}>
               <p>{track.title}</p>
               {track.audio_file ? (
-                <audio controls src={`http://localhost:8000${track.audio_file}`} />
+                <audio controls src={`${process.env.NEXT_PUBLIC_API_URL?.replace("/api", "")}${track.audio_file}`} />
               ) : (
                 <p className="text-gray-500">音源がありません</p>
               )}
