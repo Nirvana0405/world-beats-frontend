@@ -1,4 +1,3 @@
-// pages/profile-edit.tsx
 import { useEffect, useState, ChangeEvent, FormEvent, FC } from "react";
 import { useRouter } from "next/router";
 import { logoutUser } from "@/lib/auth";
@@ -82,7 +81,8 @@ const ProfileEditPage: FC = () => {
 
       if (!res.ok) {
         const data = await res.json();
-        throw new Error(Object.values(data)?.[0]?.[0] || "更新に失敗しました");
+        const firstError = (data as Record<string, string[]>)[Object.keys(data)[0]]?.[0];
+        throw new Error(firstError || "更新に失敗しました");
       }
 
       setMessage("✅ プロフィールを更新しました！");
@@ -118,7 +118,8 @@ const ProfileEditPage: FC = () => {
 
       if (!res.ok) {
         const data = await res.json();
-        throw new Error(Object.values(data)?.[0]?.[0] || "アップロードに失敗しました");
+        const firstError = (data as Record<string, string[]>)[Object.keys(data)[0]]?.[0];
+        throw new Error(firstError || "アップロードに失敗しました");
       }
 
       setMessage("✅ プロフィール画像をアップロードしました！");
@@ -185,26 +186,25 @@ const ProfileEditPage: FC = () => {
 
 export default ProfileEditPage;
 
-// 🔧 共通コンポーネント
-
-const Input: FC<{
-  label: string;
-  name?: string;
-  value: string;
-  onChange: (e: ChangeEvent<HTMLInputElement>) => void;
-}> = ({ label, name, value, onChange }) => (
+// 共通UIコンポーネント
+const Input: FC<{ label: string; name?: string; value: string; onChange: (e: ChangeEvent<HTMLInputElement>) => void }> = ({
+  label,
+  name,
+  value,
+  onChange,
+}) => (
   <div>
     <label className="block font-medium mb-1">{label}</label>
     <input type="text" name={name} value={value} onChange={onChange} className="w-full border p-2 rounded" />
   </div>
 );
 
-const Textarea: FC<{
-  label: string;
-  name: string;
-  value: string;
-  onChange: (e: ChangeEvent<HTMLTextAreaElement>) => void;
-}> = ({ label, name, value, onChange }) => (
+const Textarea: FC<{ label: string; name: string; value: string; onChange: (e: ChangeEvent<HTMLTextAreaElement>) => void }> = ({
+  label,
+  name,
+  value,
+  onChange,
+}) => (
   <div>
     <label className="block font-medium mb-1">{label}</label>
     <textarea name={name} value={value} onChange={onChange} className="w-full border p-2 rounded" />
@@ -219,9 +219,7 @@ const Section: FC<{ title?: string; children: React.ReactNode }> = ({ title, chi
 );
 
 const Alert: FC<{ type: "success" | "error"; text: string }> = ({ type, text }) => (
-  <div
-    className={`p-2 rounded mb-4 ${type === "success" ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"}`}
-  >
+  <div className={`p-2 rounded mb-4 ${type === "success" ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"}`}>
     {text}
   </div>
 );
