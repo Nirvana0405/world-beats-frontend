@@ -37,7 +37,7 @@ export default function NotificationsPage() {
     };
 
     fetchNotifications();
-  }, [router]); // ← 依存配列を指定
+  }, [router]); // ← routerを依存配列に含めることでESLintエラーを回避
 
   return (
     <div className="max-w-2xl mx-auto p-4">
