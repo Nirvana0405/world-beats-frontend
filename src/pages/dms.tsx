@@ -15,9 +15,10 @@ export default function DMChatPage() {
   const [newMessage, setNewMessage] = useState("");
   const [receiverId, setReceiverId] = useState("");
 
-  const currentUserId = typeof window !== "undefined"
-    ? Number(localStorage.getItem("user_id"))
-    : 0;
+  const currentUserId =
+    typeof window !== "undefined"
+      ? Number(localStorage.getItem("user_id"))
+      : 0;
 
   useEffect(() => {
     const storedToken = localStorage.getItem("access_token");
@@ -36,8 +37,8 @@ export default function DMChatPage() {
       });
       const data = await res.json();
       setMessages(Array.isArray(data.results) ? data.results : []);
-    } catch (_error) {
-      console.error("DM取得失敗:", _error);
+    } catch (_err) {
+      console.error("DM取得失敗");
     }
   };
 
@@ -65,16 +66,18 @@ export default function DMChatPage() {
       const newMsg: Message = await res.json();
       setMessages((prev) => [...prev, newMsg]);
       setNewMessage("");
-    } catch (_error) {
-      console.error("送信エラー:", _error);
+    } catch (_err) {
+      console.error("送信エラー");
       alert("送信に失敗しました");
     }
   };
 
   return (
     <div className="flex flex-col h-screen bg-gray-50">
+      {/* ヘッダー */}
       <div className="p-4 border-b font-bold text-lg bg-white">📨 ダイレクトメッセージ</div>
 
+      {/* メッセージリスト */}
       <div className="flex-1 p-4 overflow-y-auto space-y-2">
         {messages.map((msg) => (
           <div
@@ -93,6 +96,7 @@ export default function DMChatPage() {
         ))}
       </div>
 
+      {/* 入力フォーム */}
       <div className="p-4 border-t bg-white flex gap-2">
         <input
           type="text"
