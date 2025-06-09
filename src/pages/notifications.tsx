@@ -37,7 +37,7 @@ export default function NotificationsPage() {
     };
 
     fetchNotifications();
-  }, [router]);
+  }, [router]); // ← 依存配列を指定
 
   return (
     <div className="max-w-2xl mx-auto p-4">
