@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useCallback } from "react";
 import { useRouter } from "next/router";
 
 type Message = {
@@ -22,7 +22,6 @@ export default function DMThreadPage() {
   const [token, setToken] = useState<string | null>(null);
   const [myUserId, setMyUserId] = useState<number | null>(null);
 
-  // トークン・ユーザーIDの取得（クライアントのみ）
   useEffect(() => {
     if (typeof window !== "undefined") {
       setToken(localStorage.getItem("access_token"));
@@ -30,42 +29,46 @@ export default function DMThreadPage() {
     }
   }, []);
 
-  // 共通fetch関数
-  const fetchWithToken = async (url: string, options: RequestInit = {}) => {
-    if (!token) throw new Error("未認証");
+  const fetchWithToken = useCallback(
+    async (url: string, options: RequestInit = {}) => {
+      if (!token) throw new Error("未認証");
+      return fetch(url, {
+        ...options,
+        headers: {
+          ...(options.headers || {}),
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      });
+    },
+    [token]
+  );
 
-    return fetch(url, {
-      ...options,
-      headers: {
-        ...(options.headers || {}),
-        Authorization: `Bearer ${token}`,
-        "Content-Type": "application/json",
-      },
-    });
-  };
-
-  // メッセージ取得
-  const fetchMessages = async () => {
+  const fetchMessages = useCallback(async () => {
     if (!token || isNaN(userId)) return;
     try {
-      const res = await fetchWithToken(`http://localhost:8000/api/dms/threads/${userId}/`);
+      const res = await fetchWithToken(
+        `http://localhost:8000/api/dms/threads/${userId}/`
+      );
       if (!res.ok) throw new Error(`DM取得失敗 (${res.status})`);
       const data = await res.json();
       setMessages(data);
     } catch (err) {
       console.error("DM取得エラー:", err);
     }
-  };
+  }, [token, userId, fetchWithToken]);
 
-  // メッセージ送信
   const sendMessage = async () => {
     if (!newMessage.trim() || !token || isNaN(userId)) return;
 
     try {
-      const res = await fetchWithToken(`http://localhost:8000/api/dms/direct-messages/`, {
-        method: "POST",
-        body: JSON.stringify({ receiver: userId, message: newMessage }),
-      });
+      const res = await fetchWithToken(
+        `http://localhost:8000/api/dms/direct-messages/`,
+        {
+          method: "POST",
+          body: JSON.stringify({ receiver: userId, message: newMessage }),
+        }
+      );
 
       if (!res.ok) throw new Error(`送信失敗 (${res.status})`);
       const sent = await res.json();
@@ -76,15 +79,13 @@ export default function DMThreadPage() {
     }
   };
 
-  // 初回・定期取得
   useEffect(() => {
     if (isNaN(userId)) return;
     fetchMessages();
     const interval = setInterval(fetchMessages, 5000);
     return () => clearInterval(interval);
-  }, [userId, token]);
+  }, [userId, fetchMessages]);
 
-  // 未読→既読処理
   useEffect(() => {
     if (!token || isNaN(userId)) return;
 
@@ -98,10 +99,13 @@ export default function DMThreadPage() {
       try {
         await Promise.all(
           unreadIds.map((id) =>
-            fetchWithToken(`http://localhost:8000/api/dms/direct-messages/${id}/`, {
-              method: "PATCH",
-              body: JSON.stringify({ is_read: true }),
-            })
+            fetchWithToken(
+              `http://localhost:8000/api/dms/direct-messages/${id}/`,
+              {
+                method: "PATCH",
+                body: JSON.stringify({ is_read: true }),
+              }
+            )
           )
         );
       } catch (err) {
@@ -110,9 +114,8 @@ export default function DMThreadPage() {
     };
 
     markAsRead();
-  }, [messages]);
+  }, [messages, token, userId, fetchWithToken]);
 
-  // スクロール処理
   useEffect(() => {
     scrollRef.current?.scrollTo({
       top: scrollRef.current.scrollHeight,
@@ -124,17 +127,12 @@ export default function DMThreadPage() {
     <div className="max-w-2xl mx-auto p-4">
       <h2 className="text-xl font-bold mb-4">💬 チャット</h2>
 
-      <div
-        className="border rounded-lg p-4 h-96 overflow-y-auto bg-white"
-        ref={scrollRef}
-      >
+      <div className="border rounded-lg p-4 h-96 overflow-y-auto bg-white" ref={scrollRef}>
         {messages.map((msg) => (
           <div
             key={msg.id}
             className={`mb-2 p-2 rounded-md w-fit max-w-[70%] ${
-              msg.sender === myUserId
-                ? "ml-auto bg-blue-100"
-                : "bg-gray-200"
+              msg.sender === myUserId ? "ml-auto bg-blue-100" : "bg-gray-200"
             }`}
           >
             <p className="text-sm">{msg.content}</p>

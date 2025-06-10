@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/router";
+import Image from "next/image"; // ✅ 追加
 
 type Profile = {
   display_name: string;
@@ -45,7 +46,7 @@ export default function ProfilePage() {
     };
 
     fetchProfile();
-  }, [router]);
+  }, [router]); // ✅ routerを依存に追加
 
   if (loading) return <p className="p-6">読み込み中...</p>;
   if (!profile) return <p className="p-6">プロフィールが見つかりません</p>;
@@ -55,11 +56,15 @@ export default function ProfilePage() {
       <h1 className="text-2xl font-bold mb-4">{profile.display_name}</h1>
 
       {profile.icon && (
-        <img
-          src={`${process.env.NEXT_PUBLIC_API_URL?.replace("/api", "")}${profile.icon}`}
-          alt="プロフィール画像"
-          className="w-24 h-24 rounded-full mb-4"
-        />
+        <div className="w-24 h-24 relative mb-4">
+          <Image
+            src={`${process.env.NEXT_PUBLIC_API_URL?.replace("/api", "")}${profile.icon}`}
+            alt="プロフィール画像"
+            layout="fill"
+            objectFit="cover"
+            className="rounded-full"
+          />
+        </div>
       )}
 
       <p className="mb-2">📝 自己紹介: {profile.bio || "未設定"}</p>

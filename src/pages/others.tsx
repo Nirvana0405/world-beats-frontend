@@ -1,4 +1,9 @@
-import { useEffect, useState } from "react";
+// src/pages/others.tsx
+
+import { useEffect, useState, useCallback } from "react";
+import Image from "next/image";
+import { getToken, isLoggedIn } from "@/lib/auth";
+import { useRouter } from "next/router";
 
 type Profile = {
   id: number;
@@ -12,53 +17,90 @@ type Profile = {
 
 export default function OthersPage() {
   const [profiles, setProfiles] = useState<Profile[]>([]);
-  const [token, setToken] = useState<string | null>(null);
+  const router = useRouter();
 
-  useEffect(() => {
-    const stored = localStorage.getItem("access_token");
-    if (!stored) return;
-    setToken(stored);
+  const fetchProfiles = useCallback(async () => {
+    const token = getToken();
+    if (!token) return;
 
-    fetch("http://localhost:8000/api/profiles/others/", {
-      headers: { Authorization: `Bearer ${stored}` },
-    })
-      .then((res) => res.json())
-      .then((data) => setProfiles(data));
+    try {
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/profiles/others/`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+      if (!res.ok) throw new Error("プロフィールの取得に失敗しました");
+      const data = await res.json();
+      setProfiles(data);
+    } catch (err) {
+      console.error("プロフィール取得エラー:", err);
+    }
   }, []);
 
-  const handleLike = async (toUserId: number) => {
-    if (!token) return;
-    const res = await fetch("http://localhost:8000/api/tracks/like/", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-      body: JSON.stringify({ to_user: toUserId }),
-    });
+  useEffect(() => {
+    if (!isLoggedIn()) {
+      router.push("/login");
+      return;
+    }
 
-    if (res.ok) {
-      alert("♥ Likeしました！");
-    } else {
-      const err = await res.json();
-      alert("エラー：" + JSON.stringify(err));
+    fetchProfiles();
+  }, [router, fetchProfiles]);
+
+  const handleLike = async (toUserId: number) => {
+    const token = getToken();
+    if (!token) {
+      alert("ログインが必要です");
+      router.push("/login");
+      return;
+    }
+
+    try {
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/tracks/like/`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({ to_user: toUserId }),
+        }
+      );
+
+      if (res.ok) {
+        alert("♥ Likeしました！");
+      } else {
+        const errorData = await res.json();
+        alert("エラー：" + (errorData?.detail || "Likeに失敗しました"));
+      }
+    } catch (err) {
+      console.error("Like送信エラー:", err);
+      alert("ネットワークエラーが発生しました");
     }
   };
 
   return (
     <div className="p-4">
       <h1 className="text-xl font-bold mb-4">🎵 ユーザー一覧（マッチ候補）</h1>
-      <ul className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <ul className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         {profiles.map((profile) => (
-          <li key={profile.id} className="border p-4 rounded">
+          <li key={profile.id} className="border p-4 rounded shadow-md">
             {profile.icon && (
-              <img src={profile.icon} alt="icon" className="w-16 h-16 rounded-full mb-2" />
+              <Image
+                src={`${process.env.NEXT_PUBLIC_API_URL?.replace("/api", "")}${profile.icon}`}
+                alt="icon"
+                width={64}
+                height={64}
+                className="rounded-full mb-2"
+                unoptimized
+              />
             )}
-            <h2 className="text-lg font-bold">{profile.display_name}</h2>
-            <p>{profile.bio}</p>
+            <h2 className="text-lg font-semibold">{profile.display_name}</h2>
+            <p className="text-sm text-gray-600">{profile.bio}</p>
             <button
               onClick={() => handleLike(profile.user)}
-              className="mt-2 px-3 py-1 bg-pink-500 text-white rounded"
+              className="mt-3 px-4 py-1 bg-pink-500 hover:bg-pink-600 text-white rounded-full transition"
             >
               ♥ いいね
             </button>

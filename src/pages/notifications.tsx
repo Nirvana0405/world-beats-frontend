@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/router";
+import { getToken, isLoggedIn } from "@/lib/auth";
 
 type Notification = {
   id: number;
@@ -14,22 +15,27 @@ export default function NotificationsPage() {
   const router = useRouter();
 
   useEffect(() => {
-    const token = localStorage.getItem("access_token");
-    if (!token) {
+    if (!isLoggedIn()) {
       router.push("/login");
       return;
     }
 
+    const token = getToken();
+    if (!token) return;
+
     const fetchNotifications = async () => {
       try {
-        const res = await fetch("https://world-beats-backend.onrender.com/api/notifications/", {
-          headers: { Authorization: `Bearer ${token}` },
-        });
+        const res = await fetch(
+          `${process.env.NEXT_PUBLIC_API_URL}/notifications/`,
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          }
+        );
         if (!res.ok) throw new Error("通知の取得に失敗しました");
         const data = await res.json();
         setNotifications(data);
       } catch (err) {
-        console.error("通知取得エラー:", err);  // ✅ ここで明示的に err を使用
+        console.error("通知取得エラー:", err);
         alert("通知の取得に失敗しました");
       } finally {
         setLoading(false);
@@ -37,7 +43,30 @@ export default function NotificationsPage() {
     };
 
     fetchNotifications();
-  }, [router]); // ✅ useRouter の依存解消済み
+  }, [router]);
+
+  const handleMarkAsRead = async (id: number) => {
+    const token = getToken();
+    if (!token) return;
+
+    try {
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/notifications/${id}/mark-read/`,
+        {
+          method: "POST",
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+      if (!res.ok) throw new Error("既読にできませんでした");
+
+      // 状態更新
+      setNotifications((prev) =>
+        prev.map((n) => (n.id === id ? { ...n, is_read: true } : n))
+      );
+    } catch (err) {
+      console.error("既読化エラー:", err);
+    }
+  };
 
   return (
     <div className="max-w-2xl mx-auto p-4">
@@ -52,7 +81,8 @@ export default function NotificationsPage() {
           {notifications.map((n) => (
             <li
               key={n.id}
-              className={`p-3 border rounded transition ${
+              onClick={() => handleMarkAsRead(n.id)}
+              className={`p-3 border rounded cursor-pointer transition ${
                 n.is_read ? "bg-white" : "bg-yellow-50"
               }`}
             >

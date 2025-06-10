@@ -4,24 +4,35 @@ import { isLoggedIn } from "@/lib/auth";
 
 const ProtectedPage = () => {
   const router = useRouter();
-  const [authorized, setAuthorized] = useState<null | boolean>(null); // null = 判定中
+  const [authorized, setAuthorized] = useState(false);
+  const [checking, setChecking] = useState(true); // 判定中状態を分離
 
   useEffect(() => {
-    try {
-      const auth = isLoggedIn();
-      if (!auth) {
+    const checkAuth = () => {
+      try {
+        const auth = isLoggedIn();
+        if (!auth) {
+          router.push("/login");
+        } else {
+          setAuthorized(true);
+        }
+      } catch (error) {
+        console.error("認証チェック中にエラー:", error);
         router.push("/login");
-      } else {
-        setAuthorized(true);
+      } finally {
+        setChecking(false);
       }
-    } catch (error) {
-      console.error("認証チェック中にエラー:", error);
-      router.push("/login");
-    }
-  }, []);
+    };
 
-  if (authorized === null) {
-    return <p className="p-4">ログイン確認中...</p>; // ローディング状態
+    checkAuth();
+  }, [router]);
+
+  if (checking) {
+    return <p className="p-4">🔒 ログイン状態を確認しています...</p>;
+  }
+
+  if (!authorized) {
+    return null; // 認証されてない場合は何も表示しない（push中）
   }
 
   return (

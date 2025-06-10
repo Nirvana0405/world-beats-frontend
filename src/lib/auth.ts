@@ -11,6 +11,14 @@ export const isLoggedIn = (): boolean => {
   return !!localStorage.getItem(ACCESS_TOKEN_KEY);
 };
 
+// ✅ アクセストークンを取得（SSR対応）
+export const getToken = (): string | null => {
+  if (typeof window !== "undefined") {
+    return localStorage.getItem(ACCESS_TOKEN_KEY);
+  }
+  return null;
+};
+
 // ✅ ログアウト処理（localStorageからすべて削除 & リダイレクト）
 export const logoutUser = (): void => {
   if (typeof window !== "undefined") {

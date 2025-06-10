@@ -9,25 +9,42 @@ type Track = {
 
 export default function LikesPage() {
   const [likedTracks, setLikedTracks] = useState<Track[]>([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const token = localStorage.getItem('access_token');
-    if (!token) return;
+    if (!token) {
+      setLoading(false);
+      return;
+    }
 
-    fetch(`${process.env.NEXT_PUBLIC_API_URL}/tracks/liked/`, {
-      headers: {
-        'Authorization': `Bearer ${token}`,
-      },
-    })
-      .then(res => res.json())
-      .then(data => setLikedTracks(data))
-      .catch(err => console.error('エラー:', err));
+    (async () => {
+      try {
+        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/tracks/liked/`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        if (!res.ok) throw new Error('取得に失敗しました');
+
+        const data: Track[] = await res.json();
+        setLikedTracks(data);
+      } catch (err) {
+        console.error('いいね曲取得エラー:', err);
+      } finally {
+        setLoading(false);
+      }
+    })();
   }, []);
 
   return (
     <div className="p-4">
       <h1 className="text-xl font-bold mb-4">💖 いいねした楽曲一覧</h1>
-      {likedTracks.length === 0 ? (
+
+      {loading ? (
+        <p>読み込み中...</p>
+      ) : likedTracks.length === 0 ? (
         <p className="text-gray-500">まだいいねした曲がありません。</p>
       ) : (
         <div className="space-y-4">

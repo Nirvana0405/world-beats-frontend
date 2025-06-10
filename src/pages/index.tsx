@@ -10,23 +10,23 @@ export default function Home() {
         </p>
         <ul className="space-y-3">
           <li>
-            <Link href="/login" className="text-blue-500 hover:underline">
-              🔐 ログイン
+            <Link href="/login">
+              <span className="text-blue-500 hover:underline">🔐 ログイン</span>
             </Link>
           </li>
           <li>
-            <Link href="/register" className="text-blue-500 hover:underline">
-              📝 新規登録
+            <Link href="/register">
+              <span className="text-blue-500 hover:underline">📝 新規登録</span>
             </Link>
           </li>
           <li>
-            <Link href="/tracks" className="text-blue-500 hover:underline">
-              🎵 トラック一覧
+            <Link href="/tracks">
+              <span className="text-blue-500 hover:underline">🎵 トラック一覧</span>
             </Link>
           </li>
           <li>
-            <Link href="/upload" className="text-blue-500 hover:underline">
-              ⬆️ 音声アップロード
+            <Link href="/upload">
+              <span className="text-blue-500 hover:underline">⬆️ 音声アップロード</span>
             </Link>
           </li>
         </ul>

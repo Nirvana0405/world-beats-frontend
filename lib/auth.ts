@@ -1,10 +1,11 @@
+// src/lib/auth.ts
 import Cookies from 'js-cookie';
 
 /**
  * アクセストークンを保存（1日間）
  */
 export const setToken = (token: string) => {
-  Cookies.set('access_token', token, { expires: 1 });
+  Cookies.set('access_token', token, { expires: 1 }); // 1日間保存
 };
 
 /**
@@ -16,14 +17,14 @@ export const getToken = (): string | undefined => {
 };
 
 /**
- * トークンを削除
+ * アクセストークンを削除
  */
 export const removeToken = () => {
   Cookies.remove('access_token');
 };
 
 /**
- * ログイン判定（SSR対策付き）
+ * ログイン判定（クライアント実行のみ）
  */
 export const isLoggedIn = (): boolean => {
   if (typeof window === 'undefined') return false;
@@ -31,8 +32,9 @@ export const isLoggedIn = (): boolean => {
 };
 
 /**
- * ログアウト処理
+ * ログアウト処理（追加で必要ならリダイレクトもここで）
  */
 export const logoutUser = () => {
   removeToken();
+  // 例: 画面遷移を含めるならここで router.push('/login') などを使う
 };

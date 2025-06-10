@@ -1,4 +1,6 @@
 import { useEffect, useState } from "react";
+import { getToken } from "@/lib/auth";
+import { useRouter } from "next/router";
 
 type Message = {
   id: number;
@@ -10,46 +12,52 @@ type Message = {
 };
 
 export default function DMChatPage() {
-  const [token, setToken] = useState<string | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
   const [newMessage, setNewMessage] = useState("");
   const [receiverId, setReceiverId] = useState("");
-
-  const currentUserId =
-    typeof window !== "undefined"
-      ? Number(localStorage.getItem("user_id"))
-      : 0;
+  const [currentUserId, setCurrentUserId] = useState<number | null>(null);
+  const router = useRouter();
 
   useEffect(() => {
-    const storedToken = localStorage.getItem("access_token");
-    if (!storedToken) return;
-    setToken(storedToken);
-  }, []);
+    const token = getToken();
+    const userId = localStorage.getItem("user_id");
 
-  useEffect(() => {
-    if (token) fetchMessages(token);
-  }, [token]);
+    if (!token || !userId) {
+      router.push("/login");
+      return;
+    }
+
+    setCurrentUserId(Number(userId));
+    fetchMessages(token);
+  }, [router]);
 
   const fetchMessages = async (accessToken: string) => {
     try {
-      const res = await fetch("http://localhost:8000/api/dms/", {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/dms/`, {
         headers: { Authorization: `Bearer ${accessToken}` },
       });
       const data = await res.json();
-      setMessages(Array.isArray(data.results) ? data.results : []);
-    } catch (_err) {
-      console.error("DM取得失敗");
+      const results = Array.isArray(data.results) ? data.results : [];
+      setMessages(
+        results.sort(
+          (a: Message, b: Message) =>
+            Date.parse(a.timestamp) - Date.parse(b.timestamp)
+        )
+      );
+    } catch (err) {
+      console.error("DM取得失敗:", err);
     }
   };
 
   const handleSend = async () => {
+    const token = getToken();
     if (!token || !receiverId || !newMessage.trim()) {
       alert("全て入力してください");
       return;
     }
 
     try {
-      const res = await fetch("http://localhost:8000/api/dms/", {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/dms/`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -66,37 +74,40 @@ export default function DMChatPage() {
       const newMsg: Message = await res.json();
       setMessages((prev) => [...prev, newMsg]);
       setNewMessage("");
-    } catch (_err) {
-      console.error("送信エラー");
+    } catch (err) {
+      console.error("送信エラー:", err);
       alert("送信に失敗しました");
     }
   };
 
   return (
     <div className="flex flex-col h-screen bg-gray-50">
-      {/* ヘッダー */}
-      <div className="p-4 border-b font-bold text-lg bg-white">📨 ダイレクトメッセージ</div>
-
-      {/* メッセージリスト */}
-      <div className="flex-1 p-4 overflow-y-auto space-y-2">
-        {messages.map((msg) => (
-          <div
-            key={msg.id}
-            className={`max-w-xs px-4 py-2 rounded-lg ${
-              msg.sender === currentUserId
-                ? "ml-auto bg-blue-500 text-white"
-                : "mr-auto bg-gray-300 text-black"
-            }`}
-          >
-            {msg.message}
-            <div className="text-xs mt-1 text-right text-gray-200">
-              {new Date(msg.timestamp).toLocaleTimeString()}
-            </div>
-          </div>
-        ))}
+      <div className="p-4 border-b font-bold text-lg bg-white">
+        📨 ダイレクトメッセージ
       </div>
 
-      {/* 入力フォーム */}
+      <div className="flex-1 p-4 overflow-y-auto space-y-2">
+        {messages.length === 0 ? (
+          <p className="text-gray-500">メッセージがありません</p>
+        ) : (
+          messages.map((msg) => (
+            <div
+              key={msg.id}
+              className={`max-w-xs px-4 py-2 rounded-lg break-words ${
+                msg.sender === currentUserId
+                  ? "ml-auto bg-blue-500 text-white"
+                  : "mr-auto bg-gray-300 text-black"
+              }`}
+            >
+              {msg.message}
+              <div className="text-xs mt-1 text-right text-gray-200">
+                {new Date(msg.timestamp).toLocaleTimeString()}
+              </div>
+            </div>
+          ))
+        )}
+      </div>
+
       <div className="p-4 border-t bg-white flex gap-2">
         <input
           type="text"
@@ -110,7 +121,7 @@ export default function DMChatPage() {
           placeholder="メッセージ"
           value={newMessage}
           onChange={(e) => setNewMessage(e.target.value)}
-          onKeyDown={(e) => e.key === "Enter" && handleSend()}
+          onKeyDown={(e) => e.key === "Enter" && !e.shiftKey && handleSend()}
           className="border flex-1 rounded p-2"
         />
         <button

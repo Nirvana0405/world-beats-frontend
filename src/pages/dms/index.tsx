@@ -1,6 +1,6 @@
-// pages/dms/index.tsx
 import { useEffect, useState } from "react";
 import { useRouter } from "next/router";
+import Image from "next/image"; // ✅ 追加
 
 type Thread = {
   user_id: number;
@@ -31,7 +31,7 @@ export default function DMThreadsPage() {
       })
       .then((data) => setThreads(data))
       .catch((err) => console.error("DM一覧取得エラー:", err));
-  }, []);
+  }, [router]); // ✅ router を依存に追加
 
   const handleThreadClick = (userId: number) => {
     router.push(`/dms/${userId}`);
@@ -52,10 +52,12 @@ export default function DMThreadsPage() {
               onClick={() => handleThreadClick(t.user_id)}
             >
               {t.icon_url ? (
-                <img
+                <Image
                   src={t.icon_url}
                   alt="icon"
-                  className="w-10 h-10 rounded-full mr-3"
+                  width={40}
+                  height={40}
+                  className="rounded-full mr-3"
                 />
               ) : (
                 <div className="w-10 h-10 rounded-full bg-gray-300 mr-3 flex items-center justify-center text-white">
