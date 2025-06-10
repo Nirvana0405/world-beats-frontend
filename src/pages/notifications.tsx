@@ -34,10 +34,11 @@ export default function NotificationsPage() {
         if (!res.ok) throw new Error("通知の取得に失敗しました");
         const data = await res.json();
         setNotifications(data);
-      } catch (err) {
+        setLoading(false);
+      } catch (err: unknown) {
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
         console.error("通知取得エラー:", err);
         alert("通知の取得に失敗しました");
-      } finally {
         setLoading(false);
       }
     };
@@ -59,11 +60,11 @@ export default function NotificationsPage() {
       );
       if (!res.ok) throw new Error("既読にできませんでした");
 
-      // 状態更新
       setNotifications((prev) =>
         prev.map((n) => (n.id === id ? { ...n, is_read: true } : n))
       );
-    } catch (err) {
+    } catch (err: unknown) {
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       console.error("既読化エラー:", err);
     }
   };

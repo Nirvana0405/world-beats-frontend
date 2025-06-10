@@ -1,6 +1,9 @@
 import { useState, FormEvent, ChangeEvent } from "react";
 
 export default function RegisterPage() {
+  // ✅ ここでAPI URLを出力して確認できます（ブラウザのConsoleに出る）
+  console.log("API URL:", process.env.NEXT_PUBLIC_API_URL);
+
   const [form, setForm] = useState({
     username: "",
     email: "",
@@ -30,9 +33,10 @@ export default function RegisterPage() {
 
       if (response.ok) {
         setMessage("✅ 仮登録に成功しました。メールを確認してください。");
+        setForm({ username: "", email: "", password: "" }); // フォームリセット（任意）
       } else {
         const errorData = await response.json();
-        setError("エラー: " + JSON.stringify(errorData));
+        setError("エラー: " + Object.values(errorData).flat().join(" / "));
       }
     } catch (err: unknown) {
       console.error("通信エラー:", err);

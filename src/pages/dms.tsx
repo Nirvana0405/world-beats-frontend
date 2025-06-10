@@ -44,7 +44,7 @@ export default function DMChatPage() {
             Date.parse(a.timestamp) - Date.parse(b.timestamp)
         )
       );
-    } catch (err) {
+    } catch (err: unknown) {
       console.error("DM取得失敗:", err);
     }
   };
@@ -74,7 +74,7 @@ export default function DMChatPage() {
       const newMsg: Message = await res.json();
       setMessages((prev) => [...prev, newMsg]);
       setNewMessage("");
-    } catch (err) {
+    } catch (err: unknown) {
       console.error("送信エラー:", err);
       alert("送信に失敗しました");
     }
