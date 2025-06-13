@@ -5,7 +5,7 @@
 /.pnp
 .pnp.*
 
-# yarn
+# === yarn ===
 .yarn/*
 !.yarn/patches
 !.yarn/plugins
@@ -35,9 +35,7 @@ yarn-error.log*
 # === env files ===
 .env*
 !.env.production  # ✅ 本番用のみ Git に含める
-
-# === local env (明示的に除外)
-.env.local
+.env.local         # 🚫 ローカル開発用は含めない
 
 # === vercel ===
 .vercel
@@ -45,11 +43,3 @@ yarn-error.log*
 # === typescript ===
 *.tsbuildinfo
 next-env.d.ts
-
-
-
-# ignore all env files
-.env*
-
-# but allow .env.production to be committed
-!.env.production
