@@ -1,6 +1,6 @@
 import { useRouter } from "next/router";
-import { useEffect, useState } from "react";
-import Link from "next/link"; // ✅ 追加
+import { useEffect, useState, useCallback } from "react";
+import Link from "next/link";
 
 type Status = "loading" | "success" | "error";
 
@@ -9,33 +9,28 @@ export default function ActivatePage() {
   const { token } = router.query;
   const [status, setStatus] = useState<Status>("loading");
 
-  useEffect(() => {
-    if (!token || typeof token !== "string") return;
-
-    const activateAccount = async () => {
-      try {
-        const response = await fetch(
-          `${process.env.NEXT_PUBLIC_API_URL}/accounts/activate/${token}/`,
-          {
-            method: "GET",
-          }
-        );
-
-        if (response.ok) {
-          setStatus("success");
-        } else {
-          setStatus("error");
+  const activateAccount = useCallback(async (tokenStr: string) => {
+    try {
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/accounts/activate/${encodeURIComponent(tokenStr)}/`,
+        {
+          method: "GET",
         }
-      } catch (error) {
-        console.error("Activation error:", error);
-        setStatus("error");
-      }
-    };
+      );
+      setStatus(response.ok ? "success" : "error");
+    } catch (error) {
+      console.error("Activation error:", error);
+      setStatus("error");
+    }
+  }, []);
 
-    activateAccount();
-  }, [token]);
+  useEffect(() => {
+    if (typeof token === "string") {
+      activateAccount(decodeURIComponent(token));
+    }
+  }, [token, activateAccount]);
 
-  const renderContent = () => {
+  const renderMessage = () => {
     switch (status) {
       case "loading":
         return <p>🔄 アカウントを有効化しています...</p>;
@@ -61,7 +56,7 @@ export default function ActivatePage() {
 
   return (
     <div style={{ padding: "2rem", textAlign: "center" }}>
-      {renderContent()}
+      {renderMessage()}
     </div>
   );
 }
