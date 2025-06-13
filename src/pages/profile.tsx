@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/router";
-import Image from "next/image"; // ✅ 追加
+import Image from "next/image";
 
 type Profile = {
   display_name: string;
@@ -46,14 +46,14 @@ export default function ProfilePage() {
     };
 
     fetchProfile();
-  }, [router]); // ✅ routerを依存に追加
+  }, [router]);
 
   if (loading) return <p className="p-6">読み込み中...</p>;
   if (!profile) return <p className="p-6">プロフィールが見つかりません</p>;
 
   return (
     <div className="p-6 max-w-xl mx-auto">
-      <h1 className="text-2xl font-bold mb-4">{profile.display_name}</h1>
+      <h1 className="text-2xl font-bold mb-4">{profile.display_name || "未設定"}</h1>
 
       {profile.icon && (
         <div className="w-24 h-24 relative mb-4">
@@ -68,7 +68,14 @@ export default function ProfilePage() {
       )}
 
       <p className="mb-2">📝 自己紹介: {profile.bio || "未設定"}</p>
-      <p className="mb-2">🎧 好きなジャンル: {profile.favorite_genres.join(", ") || "未設定"}</p>
+
+      <p className="mb-2">
+        🎧 好きなジャンル:{" "}
+        {Array.isArray(profile.favorite_genres) && profile.favorite_genres.length > 0
+          ? profile.favorite_genres.join(", ")
+          : "未設定"}
+      </p>
+
       <p className="mb-2">🎤 好きなアーティスト: {profile.favorite_artists || "未設定"}</p>
     </div>
   );
