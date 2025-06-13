@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/router";
 import Image from "next/image";
+import Link from "next/link";
 
 type Profile = {
   display_name: string;
@@ -28,18 +29,12 @@ export default function ProfilePage() {
           headers: { Authorization: `Bearer ${token}` },
         });
 
-        if (!res.ok) {
-          throw new Error("プロフィール取得エラー");
-        }
+        if (!res.ok) throw new Error("プロフィール取得エラー");
 
         const data: Profile = await res.json();
         setProfile(data);
       } catch (err) {
-        if (err instanceof Error) {
-          console.error("取得エラー:", err.message);
-        } else {
-          console.error("取得エラー:", String(err));
-        }
+        console.error("取得エラー:", err);
       } finally {
         setLoading(false);
       }
@@ -68,15 +63,22 @@ export default function ProfilePage() {
       )}
 
       <p className="mb-2">📝 自己紹介: {profile.bio || "未設定"}</p>
-
       <p className="mb-2">
         🎧 好きなジャンル:{" "}
-        {Array.isArray(profile.favorite_genres) && profile.favorite_genres.length > 0
+        {profile.favorite_genres && profile.favorite_genres.length > 0
           ? profile.favorite_genres.join(", ")
           : "未設定"}
       </p>
-
       <p className="mb-2">🎤 好きなアーティスト: {profile.favorite_artists || "未設定"}</p>
+
+      {/* 🔧 編集ボタン */}
+      <div className="mt-6">
+        <Link href="/profile/edit">
+          <button className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600">
+            プロフィールを編集
+          </button>
+        </Link>
+      </div>
     </div>
   );
 }
