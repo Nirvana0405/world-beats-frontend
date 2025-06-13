@@ -12,7 +12,7 @@ export default function ActivatePage() {
   const activateAccount = useCallback(async (tokenStr: string) => {
     try {
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/accounts/activate/${encodeURIComponent(tokenStr)}/`,
+        `${process.env.NEXT_PUBLIC_API_URL}/accounts/activate/${tokenStr}/`,
         {
           method: "GET",
         }
@@ -26,7 +26,7 @@ export default function ActivatePage() {
 
   useEffect(() => {
     if (typeof token === "string") {
-      activateAccount(decodeURIComponent(token));
+      activateAccount(token); // ✅ decode/encode 不要
     }
   }, [token, activateAccount]);
 
