@@ -11,13 +11,19 @@ export default function ActivatePage() {
 
   const activateAccount = useCallback(async (tokenStr: string) => {
     try {
-      const response = await fetch(
+      const res = await fetch(
         `${process.env.NEXT_PUBLIC_API_URL}/accounts/activate/${tokenStr}/`,
-        {
-          method: "GET",
-        }
+        { method: "GET" }
       );
-      setStatus(response.ok ? "success" : "error");
+
+      const text = await res.text();
+
+      // ✅ 本文に含まれるメッセージで成功と判定
+      if (res.ok && (text.includes("✅") || text.includes("⚠️"))) {
+        setStatus("success");
+      } else {
+        setStatus("error");
+      }
     } catch (error) {
       console.error("Activation error:", error);
       setStatus("error");
@@ -26,7 +32,7 @@ export default function ActivatePage() {
 
   useEffect(() => {
     if (typeof token === "string") {
-      activateAccount(token); // ✅ decode/encode 不要
+      activateAccount(token);
     }
   }, [token, activateAccount]);
 
