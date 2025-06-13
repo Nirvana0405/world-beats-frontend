@@ -1,31 +1,61 @@
-import { useRouter } from 'next/router';
-import { useEffect, useState } from 'react';
+import { useRouter } from "next/router";
+import { useEffect, useState } from "react";
+
+type Status = "loading" | "success" | "error";
 
 export default function ActivatePage() {
   const router = useRouter();
   const { token } = router.query;
-  const [message, setMessage] = useState('アカウントを有効化中です...');
+  const [status, setStatus] = useState<Status>("loading");
 
   useEffect(() => {
-    if (!token) return;
+    if (!token || typeof token !== "string") return;
 
-    fetch(`http://localhost:8000/api/accounts/activate/${token}/`)
-      .then(res => {
-        if (res.ok) {
-          setMessage('✅ アカウントが有効化されました！ログインしてください。');
+    const activateAccount = async () => {
+      try {
+        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/accounts/activate/${token}/`, {
+          method: "GET",
+        });
+
+        if (response.ok) {
+          setStatus("success");
         } else {
-          setMessage('❌ 有効化に失敗しました。リンクの有効期限が切れている可能性があります。');
+          setStatus("error");
         }
-      })
-      .catch(() => {
-        setMessage('❌ サーバーへの接続に失敗しました。');
-      });
+      } catch (error) {
+        console.error("Activation error:", error);
+        setStatus("error");
+      }
+    };
+
+    activateAccount();
   }, [token]);
 
+  const renderContent = () => {
+    switch (status) {
+      case "loading":
+        return <p>🔄 アカウントを有効化しています...</p>;
+      case "success":
+        return (
+          <>
+            <h2>✅ アカウントが有効化されました！</h2>
+            <p>
+              <a href="/login">ログインはこちら</a>
+            </p>
+          </>
+        );
+      case "error":
+        return (
+          <p>❌ 有効化に失敗しました。リンクが無効か、有効期限が切れている可能性があります。</p>
+        );
+      default:
+        return null;
+    }
+  };
+
   return (
-    <div className="p-6 max-w-xl mx-auto text-center">
-      <h1 className="text-2xl font-bold mb-4">アカウント有効化</h1>
-      <p>{message}</p>
+    <div style={{ padding: "2rem", textAlign: "center" }}>
+      {renderContent()}
     </div>
   );
 }
