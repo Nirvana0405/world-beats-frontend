@@ -1,8 +1,4 @@
-import { useRouter } from "next/router";
-import { useEffect, useState, useCallback } from "react";
-import Link from "next/link";
-
-type Status = "loading" | "success" | "error";
+type Status = "loading" | "success" | "error" | "already";
 
 export default function ActivatePage() {
   const router = useRouter();
@@ -18,9 +14,14 @@ export default function ActivatePage() {
 
       const text = await res.text();
 
-      // ✅ 本文に含まれるメッセージで成功と判定
-      if (res.ok && (text.includes("✅") || text.includes("⚠️"))) {
-        setStatus("success");
+      if (res.ok) {
+        if (text.includes("すでに有効化済み")) {
+          setStatus("already");
+        } else if (text.includes("✅") || text.includes("有効化されました")) {
+          setStatus("success");
+        } else {
+          setStatus("error");
+        }
       } else {
         setStatus("error");
       }
@@ -44,6 +45,15 @@ export default function ActivatePage() {
         return (
           <>
             <h2>✅ アカウントが有効化されました！</h2>
+            <p>
+              <Link href="/login">ログインはこちら</Link>
+            </p>
+          </>
+        );
+      case "already":
+        return (
+          <>
+            <h2>⚠️ このアカウントはすでに有効化されています。</h2>
             <p>
               <Link href="/login">ログインはこちら</Link>
             </p>
