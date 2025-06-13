@@ -1,9 +1,6 @@
-import { useState, FormEvent, ChangeEvent } from "react";
+import { useState, FormEvent, ChangeEvent, useEffect } from "react";
 
 export default function RegisterPage() {
-  // ✅ ここでAPI URLを出力して確認できます（ブラウザのConsoleに出る）
-  console.log("API URL:", process.env.NEXT_PUBLIC_API_URL);
-
   const [form, setForm] = useState({
     username: "",
     email: "",
@@ -11,6 +8,11 @@ export default function RegisterPage() {
   });
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
+
+  // ✅ コンソールでAPIのURLを確認できるように（デバッグ用）
+  useEffect(() => {
+    console.log("API URL:", process.env.NEXT_PUBLIC_API_URL);
+  }, []);
 
   const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
     setForm({ ...form, [e.target.name]: e.target.value });
@@ -26,17 +28,22 @@ export default function RegisterPage() {
         `${process.env.NEXT_PUBLIC_API_URL}/accounts/register/`,
         {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: {
+            "Content-Type": "application/json",
+          },
           body: JSON.stringify(form),
         }
       );
 
       if (response.ok) {
         setMessage("✅ 仮登録に成功しました。メールを確認してください。");
-        setForm({ username: "", email: "", password: "" }); // フォームリセット（任意）
+        setForm({ username: "", email: "", password: "" }); // フォームリセット
       } else {
         const errorData = await response.json();
-        setError("エラー: " + Object.values(errorData).flat().join(" / "));
+        const errors = Object.values(errorData)
+          .flat()
+          .join(" / ");
+        setError("エラー: " + errors);
       }
     } catch (err: unknown) {
       console.error("通信エラー:", err);
@@ -49,7 +56,7 @@ export default function RegisterPage() {
       <h1 className="text-xl font-bold mb-4">📝 ユーザー登録</h1>
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
-          <label className="block">ユーザー名</label>
+          <label className="block mb-1">ユーザー名</label>
           <input
             type="text"
             name="username"
@@ -61,7 +68,7 @@ export default function RegisterPage() {
         </div>
 
         <div>
-          <label className="block">メールアドレス</label>
+          <label className="block mb-1">メールアドレス</label>
           <input
             type="email"
             name="email"
@@ -73,7 +80,7 @@ export default function RegisterPage() {
         </div>
 
         <div>
-          <label className="block">パスワード</label>
+          <label className="block mb-1">パスワード</label>
           <input
             type="password"
             name="password"
@@ -92,8 +99,14 @@ export default function RegisterPage() {
         </button>
       </form>
 
-      {message && <p className="mt-4 text-green-600 text-center">{message}</p>}
-      {error && <p className="mt-2 text-red-600 text-center">{error}</p>}
+      {message && (
+        <p className="mt-4 text-green-600 text-center font-semibold">
+          {message}
+        </p>
+      )}
+      {error && (
+        <p className="mt-4 text-red-600 text-center font-semibold">{error}</p>
+      )}
     </div>
   );
 }

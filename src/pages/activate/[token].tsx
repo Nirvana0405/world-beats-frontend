@@ -1,5 +1,6 @@
 import { useRouter } from "next/router";
 import { useEffect, useState } from "react";
+import Link from "next/link"; // ✅ 追加
 
 type Status = "loading" | "success" | "error";
 
@@ -13,9 +14,12 @@ export default function ActivatePage() {
 
     const activateAccount = async () => {
       try {
-        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/accounts/activate/${token}/`, {
-          method: "GET",
-        });
+        const response = await fetch(
+          `${process.env.NEXT_PUBLIC_API_URL}/accounts/activate/${token}/`,
+          {
+            method: "GET",
+          }
+        );
 
         if (response.ok) {
           setStatus("success");
@@ -40,13 +44,15 @@ export default function ActivatePage() {
           <>
             <h2>✅ アカウントが有効化されました！</h2>
             <p>
-              <a href="/login">ログインはこちら</a>
+              <Link href="/login">ログインはこちら</Link>
             </p>
           </>
         );
       case "error":
         return (
-          <p>❌ 有効化に失敗しました。リンクが無効か、有効期限が切れている可能性があります。</p>
+          <p>
+            ❌ 有効化に失敗しました。リンクが無効か、有効期限が切れている可能性があります。
+          </p>
         );
       default:
         return null;
