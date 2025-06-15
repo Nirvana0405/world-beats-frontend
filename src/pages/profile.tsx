@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/router";
 import Image from "next/image";
-import Link from "next/link";
 
 type Profile = {
   display_name: string;
@@ -16,6 +15,7 @@ export default function ProfilePage() {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
 
+  // ✅ プロフィール取得処理
   useEffect(() => {
     const token = localStorage.getItem("access_token");
     if (!token) {
@@ -43,8 +43,13 @@ export default function ProfilePage() {
     fetchProfile();
   }, [router]);
 
+  // ✅ 表示ロジック
   if (loading) return <p className="p-6">読み込み中...</p>;
   if (!profile) return <p className="p-6">プロフィールが見つかりません</p>;
+
+  const goToEditPage = () => {
+    router.push("/profile/edit");
+  };
 
   return (
     <div className="p-6 max-w-xl mx-auto">
@@ -73,11 +78,12 @@ export default function ProfilePage() {
 
       {/* 🔧 編集ボタン */}
       <div className="mt-6">
-        <Link href="/profile/edit">
-          <button className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600">
-            プロフィールを編集
-          </button>
-        </Link>
+        <button
+          onClick={goToEditPage}
+          className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+        >
+          プロフィールを編集
+        </button>
       </div>
     </div>
   );

@@ -1,3 +1,4 @@
+// src/pages/profile/edit.tsx
 import { useEffect, useState } from "react";
 import { useRouter } from "next/router";
 import { getToken } from "@/lib/auth";
@@ -12,9 +13,11 @@ export default function EditProfile() {
   const [message, setMessage] = useState("");
   const router = useRouter();
 
+  // ✅ プロフィール取得
   useEffect(() => {
     const token = getToken();
     if (!token) return;
+
     fetch(`${process.env.NEXT_PUBLIC_API_URL}/profiles/me/`, {
       headers: { Authorization: `Bearer ${token}` },
     })
@@ -26,13 +29,18 @@ export default function EditProfile() {
           favorite_genres: (data.favorite_genres || []).join(", "),
           favorite_artists: data.favorite_artists || "",
         })
-      );
+      )
+      .catch(() => setMessage("❌ プロフィール読み込みエラー"));
   }, []);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+  // ✅ 入力処理
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+  ) => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
+  // ✅ 更新処理
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const token = getToken();
@@ -52,43 +60,52 @@ export default function EditProfile() {
 
     if (res.ok) {
       setMessage("✅ プロフィール更新成功！");
-      router.push("/profile");
+      setTimeout(() => router.push("/profile"), 1000);
     } else {
       setMessage("❌ プロフィール更新に失敗しました");
     }
   };
 
   return (
-    <div>
-      <h2>プロフィール編集</h2>
-      <form onSubmit={handleSubmit}>
+    <div className="p-6 max-w-xl mx-auto">
+      <h2 className="text-xl font-bold mb-4">プロフィール編集</h2>
+      <form onSubmit={handleSubmit} className="space-y-4">
         <input
           name="display_name"
           value={form.display_name}
           onChange={handleChange}
           placeholder="表示名"
+          className="w-full p-2 border rounded"
         />
         <textarea
           name="bio"
           value={form.bio}
           onChange={handleChange}
           placeholder="自己紹介"
+          className="w-full p-2 border rounded"
         />
         <input
           name="favorite_genres"
           value={form.favorite_genres}
           onChange={handleChange}
           placeholder="好きなジャンル（カンマ区切り）"
+          className="w-full p-2 border rounded"
         />
         <input
           name="favorite_artists"
           value={form.favorite_artists}
           onChange={handleChange}
           placeholder="好きなアーティスト"
+          className="w-full p-2 border rounded"
         />
-        <button type="submit">保存</button>
+        <button
+          type="submit"
+          className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+        >
+          保存
+        </button>
       </form>
-      <p>{message}</p>
+      <p className="mt-4 text-sm text-gray-700">{message}</p>
     </div>
   );
 }
