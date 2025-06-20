@@ -15,7 +15,7 @@ export default function ProfilePage() {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
 
-  // ✅ プロフィール取得処理
+  // プロフィール取得処理
   useEffect(() => {
     const token = localStorage.getItem("access_token");
     if (!token) {
@@ -26,12 +26,18 @@ export default function ProfilePage() {
     const fetchProfile = async () => {
       try {
         const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/accounts/profile/`, {
-          headers: { Authorization: `Bearer ${token}` },
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Cache-Control": "no-cache",
+          },
+          cache: "no-store", // ✅ ブラウザキャッシュ防止
         });
 
         if (!res.ok) throw new Error("プロフィール取得エラー");
 
         const data: Profile = await res.json();
+        console.log("✅ プロフィール取得", data); // デバッグ用
         setProfile(data);
       } catch (err) {
         console.error("取得エラー:", err);
@@ -43,7 +49,6 @@ export default function ProfilePage() {
     fetchProfile();
   }, [router]);
 
-  // ✅ 表示ロジック
   if (loading) return <p className="p-6">読み込み中...</p>;
   if (!profile) return <p className="p-6">プロフィールが見つかりません</p>;
 
@@ -69,14 +74,10 @@ export default function ProfilePage() {
 
       <p className="mb-2">📝 自己紹介: {profile.bio || "未設定"}</p>
       <p className="mb-2">
-        🎧 好きなジャンル:{" "}
-        {profile.favorite_genres && profile.favorite_genres.length > 0
-          ? profile.favorite_genres.join(", ")
-          : "未設定"}
+        🎧 好きなジャンル: {profile.favorite_genres?.length ? profile.favorite_genres.join(", ") : "未設定"}
       </p>
       <p className="mb-2">🎤 好きなアーティスト: {profile.favorite_artists || "未設定"}</p>
 
-      {/* 🔧 編集ボタン */}
       <div className="mt-6">
         <button
           onClick={goToEditPage}

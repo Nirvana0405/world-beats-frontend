@@ -1,5 +1,4 @@
-// src/pages/profile-edit.tsx
-import { useEffect, useState, ChangeEvent, FormEvent, FC } from "react";
+import { useEffect, useState, ChangeEvent, FormEvent } from "react";
 import { useRouter } from "next/router";
 import { logoutUser } from "@/lib/auth";
 
@@ -10,14 +9,12 @@ type Profile = {
   favorite_artists: string;
 };
 
-const getToken = (): string | null => localStorage.getItem("access_token");
+const getToken = () => localStorage.getItem("access_token");
 
-const handleError = (err: unknown): string => {
-  if (err instanceof Error) return err.message || "サーバーエラーが発生しました";
-  return "サーバーエラーが発生しました";
-};
+const handleError = (err: unknown): string =>
+  err instanceof Error ? err.message || "サーバーエラーが発生しました" : "サーバーエラーが発生しました";
 
-const ProfileEditPage: FC = () => {
+export default function ProfileEditPage() {
   const router = useRouter();
   const [profile, setProfile] = useState<Profile>({
     display_name: "",
@@ -25,24 +22,25 @@ const ProfileEditPage: FC = () => {
     favorite_genres: [],
     favorite_artists: "",
   });
-  const [genreInput, setGenreInput] = useState<string>("");
+  const [genreInput, setGenreInput] = useState("");
   const [iconFile, setIconFile] = useState<File | null>(null);
-  const [loading, setLoading] = useState<boolean>(true);
-  const [message, setMessage] = useState<string>("");
-  const [error, setError] = useState<string>("");
+  const [loading, setLoading] = useState(true);
+  const [message, setMessage] = useState("");
+  const [error, setError] = useState("");
 
+  // 🔄 初期プロフィール読み込み
   useEffect(() => {
     const token = getToken();
-    if (!token) {
-      router.push("/login");
-      return;
-    }
+    if (!token) return router.push("/login");
 
     fetch(`${process.env.NEXT_PUBLIC_API_URL}/accounts/profile/`, {
-      headers: { Authorization: `Bearer ${token}` },
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Cache-Control": "no-cache",
+      },
     })
-      .then((res) => res.json())
-      .then((data) => {
+      .then(res => res.json())
+      .then(data => {
         setProfile({
           display_name: data.display_name || "",
           bio: data.bio || "",
@@ -51,15 +49,17 @@ const ProfileEditPage: FC = () => {
         });
         setGenreInput((data.favorite_genres || []).join(", "));
       })
-      .catch((err: unknown) => setError("❌ " + handleError(err)))
+      .catch(err => setError("❌ " + handleError(err)))
       .finally(() => setLoading(false));
   }, [router]);
 
+  // 📝 テキスト変更
   const handleChange = (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
-    setProfile((prev) => ({ ...prev, [name]: value }));
+    setProfile(prev => ({ ...prev, [name]: value }));
   };
 
+  // 🧾 プロフィール保存（PATCH）
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     const token = getToken();
@@ -67,7 +67,7 @@ const ProfileEditPage: FC = () => {
 
     const updatedData = {
       ...profile,
-      favorite_genres: genreInput.split(",").map((g) => g.trim()),
+      favorite_genres: genreInput.split(",").map(g => g.trim()),
     };
 
     try {
@@ -82,28 +82,27 @@ const ProfileEditPage: FC = () => {
 
       if (!res.ok) {
         const data = await res.json();
-        const firstError = (data as Record<string, string[]>)[Object.keys(data)[0]]?.[0];
-        throw new Error(firstError || "更新に失敗しました");
+        throw new Error(Object.values(data)[0]?.[0] || "更新に失敗しました");
       }
 
       setMessage("✅ プロフィールを更新しました！");
-      setTimeout(() => router.push("/profile"), 1500);
-    } catch (err: unknown) {
+      setTimeout(() => {
+        window.location.href = "/profile"; // ← 再読み込み付き
+      }, 1500);
+    } catch (err) {
       setError("❌ " + handleError(err));
     }
   };
 
+  // 📁 画像ファイル選択
   const handleFileChange = (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0] || null;
     setIconFile(file);
   };
 
+  // 🖼 画像アップロード
   const handleImageUpload = async () => {
-    if (!iconFile) {
-      setError("画像ファイルを選択してください");
-      return;
-    }
-
+    if (!iconFile) return setError("画像ファイルを選択してください");
     const token = getToken();
     if (!token) return;
 
@@ -119,16 +118,16 @@ const ProfileEditPage: FC = () => {
 
       if (!res.ok) {
         const data = await res.json();
-        const firstError = (data as Record<string, string[]>)[Object.keys(data)[0]]?.[0];
-        throw new Error(firstError || "アップロードに失敗しました");
+        throw new Error(Object.values(data)[0]?.[0] || "アップロードに失敗しました");
       }
 
       setMessage("✅ プロフィール画像をアップロードしました！");
-    } catch (err: unknown) {
+    } catch (err) {
       setError("❌ " + handleError(err));
     }
   };
 
+  // 🗑 アカウント削除
   const handleDeactivate = async () => {
     if (!confirm("本当に退会しますか？この操作は元に戻せません。")) return;
     const token = getToken();
@@ -146,7 +145,7 @@ const ProfileEditPage: FC = () => {
       } else {
         setError("退会に失敗しました。");
       }
-    } catch (err: unknown) {
+    } catch (err) {
       setError("❌ " + handleError(err));
     }
   };
@@ -162,24 +161,13 @@ const ProfileEditPage: FC = () => {
       <form onSubmit={handleSubmit} className="space-y-4">
         <Input label="表示名" name="display_name" value={profile.display_name} onChange={handleChange} />
         <Textarea label="自己紹介" name="bio" value={profile.bio} onChange={handleChange} />
-        <Input
-          label="好きなジャンル（カンマ区切り）"
-          value={genreInput}
-          onChange={(e: ChangeEvent<HTMLInputElement>) => setGenreInput(e.target.value)}
-        />
+        <Input label="好きなジャンル（カンマ区切り）" value={genreInput} onChange={e => setGenreInput(e.target.value)} />
         <Input label="好きなアーティスト" name="favorite_artists" value={profile.favorite_artists} onChange={handleChange} />
-        <button type="submit" className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded">
-          保存する
-        </button>
+        <button type="submit" className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded">保存する</button>
       </form>
 
       <Section title="プロフィール画像">
-        <input
-          type="file"
-          accept="image/*"
-          onChange={(e: ChangeEvent<HTMLInputElement>) => handleFileChange(e)}
-          className="mb-2"
-        />
+        <input type="file" accept="image/*" onChange={handleFileChange} className="mb-2" />
         <button onClick={handleImageUpload} className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700">
           画像をアップロード
         </button>
@@ -192,16 +180,14 @@ const ProfileEditPage: FC = () => {
       </Section>
     </div>
   );
-};
+}
 
-export default ProfileEditPage;
-
-// 共通コンポーネント
-const Input: FC<{ label: string; name?: string; value: string; onChange: (e: ChangeEvent<HTMLInputElement>) => void }> = ({
-  label,
-  name,
-  value,
-  onChange,
+// ✅ コンポーネント系
+const Input = ({ label, name, value, onChange }: {
+  label: string;
+  name?: string;
+  value: string;
+  onChange: (e: ChangeEvent<HTMLInputElement>) => void;
 }) => (
   <div>
     <label className="block font-medium mb-1">{label}</label>
@@ -209,11 +195,11 @@ const Input: FC<{ label: string; name?: string; value: string; onChange: (e: Cha
   </div>
 );
 
-const Textarea: FC<{ label: string; name: string; value: string; onChange: (e: ChangeEvent<HTMLTextAreaElement>) => void }> = ({
-  label,
-  name,
-  value,
-  onChange,
+const Textarea = ({ label, name, value, onChange }: {
+  label: string;
+  name: string;
+  value: string;
+  onChange: (e: ChangeEvent<HTMLTextAreaElement>) => void;
 }) => (
   <div>
     <label className="block font-medium mb-1">{label}</label>
@@ -221,14 +207,20 @@ const Textarea: FC<{ label: string; name: string; value: string; onChange: (e: C
   </div>
 );
 
-const Section: FC<{ title?: string; children: React.ReactNode }> = ({ title, children }) => (
+const Section = ({ title, children }: {
+  title?: string;
+  children: React.ReactNode;
+}) => (
   <div className="mt-6 border-t pt-4">
     {title && <h2 className="font-bold mb-2">{title}</h2>}
     {children}
   </div>
 );
 
-const Alert: FC<{ type: "success" | "error"; text: string }> = ({ type, text }) => (
+const Alert = ({ type, text }: {
+  type: "success" | "error";
+  text: string;
+}) => (
   <div className={`p-2 rounded mb-4 ${type === "success" ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"}`}>
     {text}
   </div>
