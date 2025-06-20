@@ -13,6 +13,7 @@ type Profile = {
   favorite_artists: string;
   icon?: string;
   user: number;
+  is_matched?: boolean; // ← 🔑 バックエンドで追加する必要あり
 };
 
 export default function OthersPage() {
@@ -69,7 +70,8 @@ export default function OthersPage() {
       );
 
       if (res.ok) {
-        alert("♥ Likeしました！");
+        alert("♥ いいねしました！");
+        fetchProfiles(); // 再読み込みでマッチ状態更新
       } else {
         const errorData = await res.json();
         alert("エラー：" + (errorData?.detail || "Likeに失敗しました"));
@@ -81,11 +83,11 @@ export default function OthersPage() {
   };
 
   return (
-    <div className="p-4">
-      <h1 className="text-xl font-bold mb-4">🎵 ユーザー一覧（マッチ候補）</h1>
-      <ul className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+    <div className="p-4 max-w-5xl mx-auto">
+      <h1 className="text-xl font-bold mb-6">🎵 ユーザー一覧（マッチ候補）</h1>
+      <ul className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
         {profiles.map((profile) => (
-          <li key={profile.id} className="border p-4 rounded shadow-md">
+          <li key={profile.id} className="relative border p-4 rounded-xl shadow-md bg-white">
             {profile.icon && (
               <Image
                 src={`${process.env.NEXT_PUBLIC_API_URL?.replace("/api", "")}${profile.icon}`}
@@ -96,11 +98,20 @@ export default function OthersPage() {
                 unoptimized
               />
             )}
+
+            {/* マッチ済みバッジ */}
+            {profile.is_matched && (
+              <span className="absolute top-2 right-2 bg-pink-200 text-pink-800 text-xs px-2 py-1 rounded-full">
+                💘 マッチ済み
+              </span>
+            )}
+
             <h2 className="text-lg font-semibold">{profile.display_name}</h2>
             <p className="text-sm text-gray-600">{profile.bio}</p>
+
             <button
               onClick={() => handleLike(profile.user)}
-              className="mt-3 px-4 py-1 bg-pink-500 hover:bg-pink-600 text-white rounded-full transition"
+              className="mt-4 px-4 py-2 bg-pink-500 hover:bg-pink-600 text-white text-sm rounded-full transition"
             >
               ♥ いいね
             </button>

@@ -1,5 +1,5 @@
-import { useRouter } from 'next/router';
-import { useEffect, useState, useCallback } from 'react';
+import { useRouter } from "next/router";
+import { useEffect, useState, useCallback } from "react";
 
 type Track = {
   id: number;
@@ -25,48 +25,43 @@ export default function TrackDetailPage() {
   const [likeCount, setLikeCount] = useState(0);
   const [liked, setLiked] = useState(false);
   const [comments, setComments] = useState<Comment[]>([]);
-  const [newComment, setNewComment] = useState('');
+  const [newComment, setNewComment] = useState("");
   const [currentUsername, setCurrentUsername] = useState<string | null>(null);
   const [accessToken, setAccessToken] = useState<string | null>(null);
 
   const API_BASE = process.env.NEXT_PUBLIC_API_URL;
 
   useEffect(() => {
-    if (typeof window !== 'undefined') {
-      setAccessToken(localStorage.getItem('access_token'));
+    if (typeof window !== "undefined") {
+      setAccessToken(localStorage.getItem("access_token"));
     }
   }, []);
 
-  const handlePlay = async () => {
-    if (!accessToken || !id) return;
-    try {
-      await fetch(`${API_BASE}/tracks/history/add/`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${accessToken}`,
-        },
-        body: JSON.stringify({ track: id }),
+  useEffect(() => {
+    if (!id || !API_BASE) return;
+
+    // 🎵 トラック情報取得
+    fetch(`${API_BASE}/tracks/${id}/`)
+      .then((res) => res.ok && res.json())
+      .then((data) => {
+        if (data) {
+          setTrack(data);
+          setLikeCount(data.like_count);
+        }
       });
-    } catch (err) {
-      console.error('再生履歴の保存に失敗', err);
-    }
-  };
 
-  const handleLikeToggle = async () => {
-    if (!accessToken || !id) return;
-    const res = await fetch(`${API_BASE}/tracks/${id}/like/`, {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
-      },
-    });
+    // 💬 コメント取得
+    fetchComments();
 
-    if (res.ok) {
-      setLiked((prev) => !prev);
-      setLikeCount((prev) => (liked ? prev - 1 : prev + 1));
+    // 👤 現在のユーザー取得
+    if (accessToken) {
+      fetch(`${API_BASE}/accounts/profile/`, {
+        headers: { Authorization: `Bearer ${accessToken}` },
+      })
+        .then((res) => res.ok && res.json())
+        .then((data) => data && setCurrentUsername(data.username));
     }
-  };
+  }, [id, API_BASE, accessToken]);
 
   const fetchComments = useCallback(async () => {
     if (!id || !API_BASE) return;
@@ -77,69 +72,86 @@ export default function TrackDetailPage() {
         setComments(data);
       }
     } catch (err) {
-      console.error('コメント取得エラー:', err);
+      console.error("コメント取得エラー:", err);
     }
   }, [id, API_BASE]);
 
+  const handlePlay = async () => {
+    if (!accessToken || !id) return;
+    try {
+      await fetch(`${API_BASE}/tracks/history/add/`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${accessToken}`,
+        },
+        body: JSON.stringify({ track: id }),
+      });
+    } catch (err) {
+      console.error("再生履歴の保存に失敗", err);
+    }
+  };
+
+  const handleLikeToggle = async () => {
+    if (!accessToken || !id) return;
+    try {
+      const res = await fetch(`${API_BASE}/tracks/${id}/like/`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
+      });
+
+      if (res.ok) {
+        setLiked((prev) => !prev);
+        setLikeCount((prev) => (liked ? prev - 1 : prev + 1));
+      }
+    } catch (err) {
+      console.error("Likeエラー:", err);
+    }
+  };
+
   const handleCommentSubmit = async () => {
     if (!newComment.trim() || !accessToken || !id) return;
-    const res = await fetch(`${API_BASE}/tracks/comments/add/`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${accessToken}`,
-      },
-      body: JSON.stringify({ track: id, text: newComment }),
-    });
+    try {
+      const res = await fetch(`${API_BASE}/tracks/comments/add/`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${accessToken}`,
+        },
+        body: JSON.stringify({ track: id, text: newComment }),
+      });
 
-    if (res.ok) {
-      setNewComment('');
-      fetchComments();
+      if (res.ok) {
+        setNewComment("");
+        fetchComments();
+      }
+    } catch (err) {
+      console.error("コメント送信エラー:", err);
     }
   };
 
   const handleCommentDelete = async (commentId: number) => {
-    const confirmed = window.confirm('このコメントを削除しますか？');
-    if (!confirmed || !accessToken) return;
+    if (!accessToken) return;
+    const confirmed = window.confirm("このコメントを削除しますか？");
+    if (!confirmed) return;
 
-    const res = await fetch(`${API_BASE}/tracks/comments/${commentId}/delete/`, {
-      method: 'DELETE',
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
-      },
-    });
+    try {
+      const res = await fetch(`${API_BASE}/tracks/comments/${commentId}/delete/`, {
+        method: "DELETE",
+        headers: { Authorization: `Bearer ${accessToken}` },
+      });
 
-    if (res.ok) {
-      fetchComments();
+      if (res.ok) {
+        fetchComments();
+      }
+    } catch (err) {
+      console.error("コメント削除エラー:", err);
     }
   };
 
-  useEffect(() => {
-    if (!id || !API_BASE) return;
-    fetch(`${API_BASE}/tracks/${id}/`)
-      .then((res) => res.ok && res.json())
-      .then((data) => {
-        if (data) {
-          setTrack(data);
-          setLikeCount(data.like_count);
-        }
-      });
-  }, [id, API_BASE]);
-
-  useEffect(() => {
-    fetchComments();
-  }, [fetchComments]);
-
-  useEffect(() => {
-    if (!accessToken || !API_BASE) return;
-    fetch(`${API_BASE}/accounts/profile/`, {
-      headers: { Authorization: `Bearer ${accessToken}` },
-    })
-      .then((res) => res.ok && res.json())
-      .then((data) => data && setCurrentUsername(data.username));
-  }, [accessToken, API_BASE]);
-
-  if (!track) return <div className="p-4">読み込み中...</div>;
+  if (!track) return <div className="p-4">🔄 読み込み中...</div>;
 
   return (
     <div className="p-6 max-w-2xl mx-auto">
@@ -147,14 +159,19 @@ export default function TrackDetailPage() {
       <p className="text-gray-600">🎤 アーティスト: {track.artist}</p>
       <p className="text-gray-600">👤 投稿者: {track.uploaded_by}</p>
 
-      <div className="mt-4 mb-2">
-        <button onClick={handleLikeToggle} className="text-red-500 hover:underline">
-          {liked ? '💔 いいね解除' : '❤️ いいね'}
+      <div className="mt-4 flex items-center gap-3">
+        <button onClick={handleLikeToggle} className="text-xl">
+          {liked ? "❤️" : "🤍"}
         </button>
-        <span className="ml-2">♥ {likeCount}</span>
+        <span>♥ {likeCount}</span>
       </div>
 
-      <audio controls src={track.audio_file} onPlay={handlePlay} className="w-full mt-2" />
+      <audio
+        controls
+        src={track.audio_file}
+        onPlay={handlePlay}
+        className="w-full mt-4"
+      />
 
       <hr className="my-6" />
 
@@ -162,18 +179,21 @@ export default function TrackDetailPage() {
       <ul className="space-y-2">
         {comments.map((c) => (
           <li key={c.id} className="bg-gray-100 p-3 rounded">
-            <strong>{c.user}</strong>: {c.text}
+            <div className="flex justify-between">
+              <strong>{c.user}</strong>
+              {c.user === currentUsername && (
+                <button
+                  onClick={() => handleCommentDelete(c.id)}
+                  className="text-sm text-red-600 hover:underline"
+                >
+                  削除
+                </button>
+              )}
+            </div>
+            <p>{c.text}</p>
             <small className="text-gray-600 block">
               {new Date(c.created_at).toLocaleString()}
             </small>
-            {c.user === currentUsername && (
-              <button
-                onClick={() => handleCommentDelete(c.id)}
-                className="text-sm text-red-600 hover:underline"
-              >
-                削除
-              </button>
-            )}
           </li>
         ))}
       </ul>
