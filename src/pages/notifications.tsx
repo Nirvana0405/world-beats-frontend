@@ -35,8 +35,7 @@ export default function NotificationsPage() {
         const data = await res.json();
         setNotifications(data);
         setLoading(false);
-      } catch (err: unknown) {
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      } catch (err) {
         console.error("通知取得エラー:", err);
         alert("通知の取得に失敗しました");
         setLoading(false);
@@ -63,8 +62,7 @@ export default function NotificationsPage() {
       setNotifications((prev) =>
         prev.map((n) => (n.id === id ? { ...n, is_read: true } : n))
       );
-    } catch (err: unknown) {
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    } catch (err) {
       console.error("既読化エラー:", err);
     }
   };
