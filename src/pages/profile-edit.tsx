@@ -23,16 +23,21 @@ export default function ProfileEditPage() {
 
   useEffect(() => {
     const token = getToken();
-    if (!token) return router.push("/login");
+    if (!token) {
+      router.push("/login");
+      return;
+    }
 
-    fetch(`${process.env.NEXT_PUBLIC_API_URL}/accounts/profile/`, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-        "Cache-Control": "no-cache",
-      },
-    })
-      .then(res => res.json())
-      .then(data => {
+    (async () => {
+      try {
+        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/accounts/profile/`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Cache-Control": "no-cache",
+          },
+        });
+
+        const data = await res.json();
         setProfile({
           display_name: data.display_name || "",
           bio: data.bio || "",
@@ -40,9 +45,12 @@ export default function ProfileEditPage() {
           favorite_artists: data.favorite_artists || "",
         });
         setGenreInput((data.favorite_genres || []).join(", "));
-      })
-      .catch(err => setError("❌ " + handleError(err)))
-      .finally(() => setLoading(false));
+      } catch (err) {
+        setError("❌ " + handleError(err));
+      } finally {
+        setLoading(false);
+      }
+    })();
   }, [router]);
 
   const handleChange = (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
