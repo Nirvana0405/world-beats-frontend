@@ -25,7 +25,7 @@ export default function ProfileEditPage() {
     const token = getToken();
     if (!token) {
       router.push("/login");
-      return;
+      return; // ✅ ここが重要：Promiseを返さないように明示的に return
     }
 
     (async () => {
@@ -177,6 +177,7 @@ export default function ProfileEditPage() {
   );
 }
 
+// 再利用コンポーネント
 const Input = ({ label, name, value, onChange }: {
   label: string;
   name?: string;
