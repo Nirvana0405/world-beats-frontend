@@ -28,10 +28,7 @@ export default function LoginPage() {
       localStorage.setItem("access_token", data.access);
       localStorage.setItem("refresh_token", data.refresh);
       router.push("/profile");
-    } catch (err: unknown) {
-      if (err instanceof Error) {
-        console.error("ログインエラー:", err.message);
-      }
+    } catch {
       setError("ユーザー名またはパスワードが間違っています。");
     }
   };
@@ -49,7 +46,7 @@ export default function LoginPage() {
             value={form.username}
             onChange={handleChange}
             placeholder="ユーザー名"
-            className="w-full px-4 py-2 rounded bg-black border border-red-400 text-white focus:outline-none focus:ring-2 focus:ring-red-500"
+            className="w-full px-4 py-2 rounded bg-black border border-red-400 text-white"
             required
           />
           <input
@@ -58,7 +55,7 @@ export default function LoginPage() {
             value={form.password}
             onChange={handleChange}
             placeholder="パスワード"
-            className="w-full px-4 py-2 rounded bg-black border border-red-400 text-white focus:outline-none focus:ring-2 focus:ring-red-500"
+            className="w-full px-4 py-2 rounded bg-black border border-red-400 text-white"
             required
           />
           <button

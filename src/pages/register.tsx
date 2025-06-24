@@ -39,7 +39,7 @@ export default function RegisterPage() {
       if (err instanceof Error) {
         setError(err.message);
       } else {
-        setError("予期しないエラーが発生しました");
+        setError("予期しないエラーが発生しました。");
       }
     }
   };
@@ -60,7 +60,7 @@ export default function RegisterPage() {
             onChange={handleChange}
             placeholder="ユーザー名"
             required
-            className="w-full px-4 py-2 rounded bg-black border border-red-400 text-white focus:outline-none focus:ring-2 focus:ring-red-500"
+            className="w-full px-4 py-2 rounded bg-black border border-red-400 text-white"
           />
           <input
             name="email"
@@ -69,7 +69,7 @@ export default function RegisterPage() {
             onChange={handleChange}
             placeholder="メールアドレス"
             required
-            className="w-full px-4 py-2 rounded bg-black border border-red-400 text-white focus:outline-none focus:ring-2 focus:ring-red-500"
+            className="w-full px-4 py-2 rounded bg-black border border-red-400 text-white"
           />
           <input
             name="password"
@@ -78,7 +78,7 @@ export default function RegisterPage() {
             onChange={handleChange}
             placeholder="パスワード"
             required
-            className="w-full px-4 py-2 rounded bg-black border border-red-400 text-white focus:outline-none focus:ring-2 focus:ring-red-500"
+            className="w-full px-4 py-2 rounded bg-black border border-red-400 text-white"
           />
 
           <button

@@ -25,19 +25,16 @@ export default function NotificationsPage() {
 
     const fetchNotifications = async () => {
       try {
-        const res = await fetch(
-          `${process.env.NEXT_PUBLIC_API_URL}/notifications/`,
-          {
-            headers: { Authorization: `Bearer ${token}` },
-          }
-        );
+        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/notifications/`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
         if (!res.ok) throw new Error("通知の取得に失敗しました");
         const data = await res.json();
         setNotifications(data);
-        setLoading(false);
       } catch (err) {
         console.error("通知取得エラー:", err);
         alert("通知の取得に失敗しました");
+      } finally {
         setLoading(false);
       }
     };
@@ -50,13 +47,10 @@ export default function NotificationsPage() {
     if (!token) return;
 
     try {
-      const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/notifications/${id}/mark-read/`,
-        {
-          method: "POST",
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      );
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/notifications/${id}/mark-read/`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}` },
+      });
       if (!res.ok) throw new Error("既読にできませんでした");
 
       setNotifications((prev) =>

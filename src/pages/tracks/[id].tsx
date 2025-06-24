@@ -37,32 +37,6 @@ export default function TrackDetailPage() {
     }
   }, []);
 
-  useEffect(() => {
-    if (!id || !API_BASE) return;
-
-    // 🎵 トラック情報取得
-    fetch(`${API_BASE}/tracks/${id}/`)
-      .then((res) => res.ok && res.json())
-      .then((data) => {
-        if (data) {
-          setTrack(data);
-          setLikeCount(data.like_count);
-        }
-      });
-
-    // 💬 コメント取得
-    fetchComments();
-
-    // 👤 現在のユーザー取得
-    if (accessToken) {
-      fetch(`${API_BASE}/accounts/profile/`, {
-        headers: { Authorization: `Bearer ${accessToken}` },
-      })
-        .then((res) => res.ok && res.json())
-        .then((data) => data && setCurrentUsername(data.username));
-    }
-  }, [id, API_BASE, accessToken]);
-
   const fetchComments = useCallback(async () => {
     if (!id || !API_BASE) return;
     try {
@@ -75,6 +49,35 @@ export default function TrackDetailPage() {
       console.error("コメント取得エラー:", err);
     }
   }, [id, API_BASE]);
+
+  useEffect(() => {
+    if (!id || !API_BASE) return;
+
+    // 🎵 トラック情報取得
+    fetch(`${API_BASE}/tracks/${id}/`)
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (data) {
+          setTrack(data);
+          setLikeCount(data.like_count);
+        }
+      });
+
+    fetchComments();
+
+    // 👤 現在のユーザー取得
+    if (accessToken) {
+      fetch(`${API_BASE}/accounts/profile/`, {
+        headers: { Authorization: `Bearer ${accessToken}` },
+      })
+        .then((res) => (res.ok ? res.json() : null))
+        .then((data) => {
+          if (data?.username) {
+            setCurrentUsername(data.username);
+          }
+        });
+    }
+  }, [id, API_BASE, accessToken, fetchComments]);
 
   const handlePlay = async () => {
     if (!accessToken || !id) return;
