@@ -1,4 +1,5 @@
-import { useState, FormEvent } from "react";
+// ✅ login.tsx
+import { useState, FormEvent, ChangeEvent } from "react";
 import { useRouter } from "next/router";
 import Link from "next/link";
 
@@ -7,7 +8,7 @@ export default function LoginPage() {
   const [form, setForm] = useState({ username: "", password: "" });
   const [error, setError] = useState("");
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
@@ -76,3 +77,6 @@ export default function LoginPage() {
     </div>
   );
 }
+
+// ✅ register.tsx
+// ...同様に修正して提供します（続く）

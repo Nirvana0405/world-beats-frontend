@@ -31,12 +31,6 @@ export default function TrackDetailPage() {
 
   const API_BASE = process.env.NEXT_PUBLIC_API_URL;
 
-  useEffect(() => {
-    if (typeof window !== "undefined") {
-      setAccessToken(localStorage.getItem("access_token"));
-    }
-  }, []);
-
   const fetchComments = useCallback(async () => {
     if (!id || !API_BASE) return;
     try {
@@ -51,11 +45,17 @@ export default function TrackDetailPage() {
   }, [id, API_BASE]);
 
   useEffect(() => {
+    if (typeof window !== "undefined") {
+      setAccessToken(localStorage.getItem("access_token"));
+    }
+  }, []);
+
+  useEffect(() => {
     if (!id || !API_BASE) return;
 
     // 🎵 トラック情報取得
     fetch(`${API_BASE}/tracks/${id}/`)
-      .then((res) => (res.ok ? res.json() : null))
+      .then((res) => res.ok && res.json())
       .then((data) => {
         if (data) {
           setTrack(data);
@@ -70,12 +70,8 @@ export default function TrackDetailPage() {
       fetch(`${API_BASE}/accounts/profile/`, {
         headers: { Authorization: `Bearer ${accessToken}` },
       })
-        .then((res) => (res.ok ? res.json() : null))
-        .then((data) => {
-          if (data?.username) {
-            setCurrentUsername(data.username);
-          }
-        });
+        .then((res) => res.ok && res.json())
+        .then((data) => data && setCurrentUsername(data.username));
     }
   }, [id, API_BASE, accessToken, fetchComments]);
 
