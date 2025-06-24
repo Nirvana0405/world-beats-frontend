@@ -2,13 +2,6 @@ import { useEffect, useState, ChangeEvent, FormEvent } from "react";
 import { useRouter } from "next/router";
 import { logoutUser } from "@/lib/auth";
 
-type Profile = {
-  display_name: string;
-  bio: string;
-  favorite_genres: string[];
-  favorite_artists: string;
-};
-
 const getToken = () => localStorage.getItem("access_token");
 
 const handleError = (err: unknown): string =>
@@ -16,7 +9,7 @@ const handleError = (err: unknown): string =>
 
 export default function ProfileEditPage() {
   const router = useRouter();
-  const [profile, setProfile] = useState<Profile>({
+  const [profile, setProfile] = useState({
     display_name: "",
     bio: "",
     favorite_genres: [],
@@ -28,7 +21,6 @@ export default function ProfileEditPage() {
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
 
-  // 🔄 初期プロフィール読み込み
   useEffect(() => {
     const token = getToken();
     if (!token) return router.push("/login");
@@ -53,13 +45,11 @@ export default function ProfileEditPage() {
       .finally(() => setLoading(false));
   }, [router]);
 
-  // 📝 テキスト変更
   const handleChange = (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     setProfile(prev => ({ ...prev, [name]: value }));
   };
 
-  // 🧾 プロフィール保存（PATCH）
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     const token = getToken();
@@ -87,20 +77,18 @@ export default function ProfileEditPage() {
 
       setMessage("✅ プロフィールを更新しました！");
       setTimeout(() => {
-        window.location.href = "/profile"; // ← 再読み込み付き
+        window.location.href = "/profile";
       }, 1500);
     } catch (err) {
       setError("❌ " + handleError(err));
     }
   };
 
-  // 📁 画像ファイル選択
   const handleFileChange = (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0] || null;
     setIconFile(file);
   };
 
-  // 🖼 画像アップロード
   const handleImageUpload = async () => {
     if (!iconFile) return setError("画像ファイルを選択してください");
     const token = getToken();
@@ -127,7 +115,6 @@ export default function ProfileEditPage() {
     }
   };
 
-  // 🗑 アカウント削除
   const handleDeactivate = async () => {
     if (!confirm("本当に退会しますか？この操作は元に戻せません。")) return;
     const token = getToken();
@@ -182,7 +169,6 @@ export default function ProfileEditPage() {
   );
 }
 
-// ✅ コンポーネント系
 const Input = ({ label, name, value, onChange }: {
   label: string;
   name?: string;
